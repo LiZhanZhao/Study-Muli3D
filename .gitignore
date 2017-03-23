@@ -27,3 +27,10 @@
 *.exe
 *.out
 *.app
+
+# Custom
+*.sdf
+*.suo
+*.vcxproj
+*.vcxproj.filters
+/*/*/Debug/*
