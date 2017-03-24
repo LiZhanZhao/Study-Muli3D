@@ -1,1 +1,0 @@
-Environment-map 'Majestic' by Mighty Pete; found on The Wadfather - http://www.planethalflife.com/wadfather/
