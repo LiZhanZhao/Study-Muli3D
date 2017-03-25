@@ -78,7 +78,7 @@ bool IApplication::bCreateSubSystems( const tCreationFlags &i_creationFlags )
 	if( !m_pScene->bInitialize() )
 		return false;
 
-	// virtual function
+	// 构造世界，初始化场景 (virtual function)
 	if( !bCreateWorld() )
 	{
 		DestroyWorld();
@@ -140,7 +140,7 @@ bool CApplication::bInitialize( const tCreationFlags &i_creationFlags )
 
 int CApplication::iRun()
 {
-	// 显示WIndow
+	// 显示Window
 	ShowWindow( m_hWindowHandle, SW_SHOW );
 	SetFocus( m_hWindowHandle );
 	SetCursor( LoadCursor( 0, IDC_ARROW ) );
@@ -150,11 +150,13 @@ int CApplication::iRun()
 	// bCheckMessages 检查消息，判断是否退出主循环，结束应用
 	while( bCheckMessages() )
 	{
+		// 一帧的开始
 		BeginFrame();
 
-		// virtual function
+		// 一帧的渲染 (virtual function)
 		RenderWorld();
 
+		// 一帧的结束
 		EndFrame();
 
 		Sleep( 1 );
@@ -179,6 +181,7 @@ void CApplication::BeginFrame()
 
 	m_pInput->Update();			// Get latest keyboard and mouse state
 
+	// (virtual function)
 	FrameMove();
 	m_pScene->FrameMove();
 }
@@ -216,9 +219,10 @@ void CApplication::EndFrame()
 	QueryPerformanceCounter( &iCurrentTime );
 
 	float32 fTimeDifference = (float32)(iCurrentTime.QuadPart - m_iLastTime.QuadPart);
+	// 理解为 Time.delta = (fTimeDifference / (float32)m_iTicksPerSecond.QuadPart)
+	// 所以m_fElapsedTime += Time.delta
 	m_fElapsedTime += fTimeDifference / (float32)m_iTicksPerSecond.QuadPart;
 	m_fFPS = (float32)m_iTicksPerSecond.QuadPart / fTimeDifference;
-
 	m_fInvFPS = 1.0f / m_fFPS;
 	m_iLastTime.QuadPart = iCurrentTime.QuadPart;
 }
