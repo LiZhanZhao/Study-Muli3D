@@ -40,6 +40,7 @@ CMuli3DDevice::CMuli3DDevice( CMuli3D *i_pParent, const m3ddeviceparameters *i_p
 {
 	m_pParent->AddRef();
 
+	// 初始化内部属性
 	memcpy( &m_DeviceParameters, i_pDeviceParameters, sizeof( m3ddeviceparameters ) );
 
 	memset( m_VertexStreams, 0, sizeof( m_VertexStreams ) );
@@ -71,6 +72,9 @@ result CMuli3DDevice::Create()
 
 	// NOTE: add support for other platforms here
 	#ifdef WIN32
+	// m_pPresentTarget -> Base for rendering to screen.
+	// 这里的PresentTarget 理解为使用DirectDraw的一个class,
+	// 下面的Create，就是初始化DirectDraw
 	m_pPresentTarget = new CMuli3DPresentTargetWin32( this );
 	#endif
 	

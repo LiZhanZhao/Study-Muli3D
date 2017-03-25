@@ -26,7 +26,7 @@
 #include "../m3dbase.h"
 #include "../m3dtypes.h"
 
-/// The Muli3D device.
+/// The Muli3D device.(a device for rendering.)
 class CMuli3DDevice : public IBase
 {
 protected:
@@ -551,7 +551,7 @@ private:
 private:
 	class CMuli3D				*m_pParent;			///< Pointer to parent.
 	m3ddeviceparameters			m_DeviceParameters;	///< Device parameters, initialize at device-creation time.
-	class IMuli3DPresentTarget	*m_pPresentTarget;	///< Base for rendering to screen.
+	class IMuli3DPresentTarget	*m_pPresentTarget;	///< Base for rendering to screen.(DirectDraw)
 	
 	uint32	m_iRenderStates[m3drs_numrenderstates];	///< The renderstates.
 

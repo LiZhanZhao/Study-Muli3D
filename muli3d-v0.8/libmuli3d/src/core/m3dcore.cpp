@@ -41,6 +41,7 @@ result CMuli3D::CreateDevice( CMuli3DDevice **o_ppDevice, const m3ddeviceparamet
 		return e_invalidparameters;
 	}
 
+	// ÊµÀı»¯CMuli3DDevice
 	*o_ppDevice = new CMuli3DDevice( this, i_pDeviceParameters );
 	if( !(*o_ppDevice) )
 	{
@@ -48,6 +49,7 @@ result CMuli3D::CreateDevice( CMuli3DDevice **o_ppDevice, const m3ddeviceparamet
 		return e_outofmemory;
 	}
 
+	// CMuli3DDevice create and init the present-target (DirectDraw)
 	return (*o_ppDevice)->Create();
 }
 

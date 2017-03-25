@@ -23,6 +23,7 @@ CGraphics::~CGraphics()
 bool CGraphics::bInitialize( const tCreationFlags &i_creationFlags )
 {
 	// Initialize Muli3D ------------------------------------------------------
+	// 实例化 m_pM3D 
 	if( FUNC_FAILED( CreateMuli3D( &m_pM3D ) ) )
 		return false;
 
@@ -31,6 +32,7 @@ bool CGraphics::bInitialize( const tCreationFlags &i_creationFlags )
 		m_pParent->bGetWindowed(), 32, m_pParent->iGetWindowWidth(),
 		m_pParent->iGetWindowHeight() };
 
+	// 初始化m_pM3DDevice, Creates a device(m_pM3DDevice) for rendering.
 	if( FUNC_FAILED( m_pM3D->CreateDevice( &m_pM3DDevice, &paramsDevice ) ) )
 	{
 		SAFE_RELEASE( m_pM3D );
