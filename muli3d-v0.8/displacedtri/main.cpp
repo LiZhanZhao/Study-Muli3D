@@ -35,8 +35,12 @@ int main(int argc, char** argv)
 	creationFlags.bWindowed = true;
 
 	CDisplacedTri theApp;
+	// application initialize
+	// 应用初始化
 	if( !theApp.bInitialize( creationFlags ) )
 		return 1;
 
+	//application loop
+	// 应用主循环
 	return theApp.iRun();
 }

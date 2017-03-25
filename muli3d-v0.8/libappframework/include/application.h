@@ -97,10 +97,14 @@ public:
 	bool	bInitialize( const tCreationFlags &i_creationFlags );
 	int		iRun();
 
+	// bInitialize -> bCreateSubSystems -> bCreateWorld
 	virtual bool bCreateWorld() = 0;
 	virtual void DestroyWorld() = 0;
 
-	virtual void FrameMove() = 0;		// update animated objects, etc.
+	// iRun -> BeginFrame -> FrameMove
+	virtual void FrameMove() = 0;       // update animated objects, etc.
+
+	// iRun -> RenderWorld
 	virtual void RenderWorld() = 0;		// draw objects
 
 private:

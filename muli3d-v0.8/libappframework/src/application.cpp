@@ -78,6 +78,7 @@ bool IApplication::bCreateSubSystems( const tCreationFlags &i_creationFlags )
 	if( !m_pScene->bInitialize() )
 		return false;
 
+	// virtual function
 	if( !bCreateWorld() )
 	{
 		DestroyWorld();
@@ -117,6 +118,7 @@ bool CApplication::bInitialize( const tCreationFlags &i_creationFlags )
 		return false;
 
 	// Create the render window -----------------------------------------------
+	// 创建用于渲染的Window,WindowProcedure处理消息循环
     WNDCLASS windowClass = { 0, &WindowProcedure, 0, 0, GetModuleHandle( 0 ),
 		i_creationFlags.hIcon, 0, 0, 0, "<application window>" };
     RegisterClass( &windowClass );
@@ -138,17 +140,21 @@ bool CApplication::bInitialize( const tCreationFlags &i_creationFlags )
 
 int CApplication::iRun()
 {
+	// 显示WIndow
 	ShowWindow( m_hWindowHandle, SW_SHOW );
 	SetFocus( m_hWindowHandle );
 	SetCursor( LoadCursor( 0, IDC_ARROW ) );
 	m_bActive = true;
 
 	// Begin application loop -------------------------------------------------
-
+	// bCheckMessages 检查消息，判断是否退出主循环，结束应用
 	while( bCheckMessages() )
 	{
 		BeginFrame();
+
+		// virtual function
 		RenderWorld();
+
 		EndFrame();
 
 		Sleep( 1 );
