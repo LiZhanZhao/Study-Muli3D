@@ -26,6 +26,7 @@
 #include "m3dmath_common.h"
 #include "m3dmath_vector4.h"
 
+// Dx 方式的，矩阵的行为主的
 struct matrix44
 {
 	union

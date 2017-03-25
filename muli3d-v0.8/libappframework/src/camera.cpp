@@ -8,6 +8,7 @@ CCamera::CCamera( CGraphics *i_pParent )
 {
 	m_pParent = i_pParent;
 
+	// create RenderTarget
 	if( FUNC_FAILED( m_pParent->pGetM3DDevice()->CreateRenderTarget( &m_pRenderTarget ) ) )
 		m_pRenderTarget = 0;
 
@@ -16,6 +17,7 @@ CCamera::CCamera( CGraphics *i_pParent )
 	matMatrix44Identity( m_matWorld );
 	matMatrix44Identity( m_matView );
 	matMatrix44Identity( m_matProjection );
+	// Calculate frustum-planes in world space
 	BuildFrustum();
 }
 
@@ -31,6 +33,7 @@ bool CCamera::bCreateRenderCamera( uint32 i_iWidth, uint32 i_iHeight, m3dformat 
 
 	CMuli3DDevice *pM3DDevice = m_pParent->pGetM3DDevice();
 
+	// create pColorBuffer and pDepthBuffer CMuli3DSurface is use to m_pRenderTarget
 	// Create the render texture ----------------------------------------------
 	CMuli3DSurface *pColorBuffer = 0;
 	if( FUNC_FAILED( pM3DDevice->CreateSurface( &pColorBuffer, i_iWidth, i_iHeight, i_fmtFrameBuffer ) ) )
@@ -49,6 +52,7 @@ bool CCamera::bCreateRenderCamera( uint32 i_iWidth, uint32 i_iHeight, m3dformat 
 
 	// Set the viewport -------------------------------------------------------
 	matrix44 matViewport;
+	// 这里确定了z:[0,1],类似于Dx
 	matMatrix44Viewport( matViewport, 0, 0, i_iWidth, i_iHeight, 0.0f, 1.0f );
 	m_pRenderTarget->SetViewportMatrix( matViewport );
 	
@@ -88,6 +92,8 @@ void CCamera::EndRender( bool i_bPresentToScreen )
 
 void CCamera::CalculateProjection( float32 i_fFOVAngle, float32 i_fViewDistance, float32 i_fNearClippingPlane, float32 i_fAspect )
 {
+	// *** 注意，这里的i_fViewDistance 就是 i_fZFar
+	// 那就是，i_fViewDistance 是 "i_fFarClippingPlane" 的意思
 	matMatrix44PerspectiveFovLH( m_matProjection, i_fFOVAngle, i_fAspect, i_fNearClippingPlane, i_fViewDistance );
 
 	m_fFOVAngle = i_fFOVAngle;
@@ -207,6 +213,7 @@ eVisibility CCamera::eBoxVisible( const vector3 &i_vLower, const vector3 &i_vUpp
 void CCamera::BuildFrustum()
 {
 	// Calculate frustum-planes -----------------------------------------------
+	// 计算Camera的 frustum-planes，frustum-planes 的坐标系是 world space
 	matrix44 matFrustum = matGetViewMatrix() * matGetProjectionMatrix();
 	
 	// Near

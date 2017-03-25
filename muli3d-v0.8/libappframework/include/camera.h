@@ -60,9 +60,18 @@ public:
 	inline void SetPositionRel( const vector3 &i_vPositionRel ) { m_vPosition += i_vPositionRel; }
 	inline const vector3 &vGetPosition() { return m_vPosition; }
 
-	inline void SetRotation( const vector3 &i_vRotation ) { matrix44 matTemp; matMatrix44RotationYawPitchRoll( matTemp, i_vRotation ); qQuaternionRotationMatrix( m_qOrientation, matTemp ); }
+	inline void SetRotation( const vector3 &i_vRotation ) { 
+		matrix44 matTemp; 
+		matMatrix44RotationYawPitchRoll( matTemp, i_vRotation ); 
+		qQuaternionRotationMatrix( m_qOrientation, matTemp );
+	}
 	inline void SetRotationRel( const vector3 &i_vRotationRel ) { matrix44 matTemp; matMatrix44RotationYawPitchRoll( matTemp, i_vRotationRel ); quaternion qTemp; qQuaternionRotationMatrix( qTemp, matTemp ); m_qOrientation *= qTemp; }
-	inline void SetLookAt( const vector3 &i_vPosition, const vector3 i_vUp ) { matrix44 matTemp; matMatrix44LookAtLH( matTemp, m_vPosition, i_vPosition, i_vUp ); qQuaternionRotationMatrix( m_qOrientation, matTemp ); }
+	inline void SetLookAt( const vector3 &i_vPosition, const vector3 i_vUp ) 
+	{ 
+		matrix44 matTemp; 
+		matMatrix44LookAtLH( matTemp, m_vPosition, i_vPosition, i_vUp ); 
+		qQuaternionRotationMatrix( m_qOrientation, matTemp ); 
+	}
 	inline void SetOrientation( const quaternion &i_qOrientation ) { m_qOrientation = i_qOrientation; }
 	inline const quaternion &qGetOrientation() { return m_qOrientation; }
 
@@ -79,6 +88,7 @@ public:
 	matrix44	m_matWorld, m_matView, m_matProjection;
 	plane		m_plFrustum[6];
 
+	// 注意，这里的m_fViewDistance 相当于 "m_fFarClippingPlane"
 	float32		m_fFOVAngle, m_fAspect, m_fNearClippingPlane, m_fViewDistance;
 	vector3		m_vPosition;
 	quaternion	m_qOrientation;

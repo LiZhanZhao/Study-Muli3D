@@ -54,7 +54,7 @@ result CMuli3DSurface::Create( uint32 i_iWidth, uint32 i_iHeight, m3dformat i_fm
 	m_iHeight = i_iHeight;
 	m_iWidthMin1 = m_iWidth - 1;
 	m_iHeightMin1 = m_iHeight - 1;
-
+	// 主要就是为m_pData开辟内存空间
 	m_pData = new float32[m_iWidth * m_iHeight * iFloats];
 	if( !m_pData )
 	{

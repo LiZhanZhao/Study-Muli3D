@@ -659,6 +659,7 @@ result CMuli3DDevice::CreateSurface( CMuli3DSurface **o_ppSurface, uint32 i_iWid
 		return e_invalidparameters;
 	}
 
+	// 实例化CMuli3DSurface
 	*o_ppSurface = new CMuli3DSurface( this );
 	if( !(*o_ppSurface) )
 	{
@@ -666,6 +667,7 @@ result CMuli3DDevice::CreateSurface( CMuli3DSurface **o_ppSurface, uint32 i_iWid
 		return e_outofmemory;
 	}
 
+	// 初始化CMuli3DSurface的属性m_pData...
 	result resCreate = (*o_ppSurface)->Create( i_iWidth, i_iHeight, i_fmtFormat );
 	if( FUNC_FAILED( resCreate ) )
 	{

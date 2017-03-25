@@ -29,9 +29,13 @@ bool CDisplacedTri::bCreateWorld()
 
 	// Create and setup camera ------------------------------------------------
 	m_pCamera = new CMyCamera( pGetGraphics() );
+
+	// bCreateRenderCamera will init m_pCamera 's renderTarget and Viewport
+	// Viewport Matrix is save in Camera
 	if( !m_pCamera->bCreateRenderCamera( iGetWindowWidth(), iGetWindowHeight() ) )
 		return false;
 
+	// °Ñi_fViewDistance µ±³É "i_fFarClippingPlane" 
 	m_pCamera->CalculateProjection( M3D_PI * 0.5f, 10.0f, 0.1f );
 
 	m_pCamera->SetPosition( vector3( 0.15f, -0.2f, -0.8f ) );

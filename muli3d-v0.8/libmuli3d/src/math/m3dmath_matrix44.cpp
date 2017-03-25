@@ -343,6 +343,7 @@ matrix44 &matMatrix44OrthoRH( matrix44 &o_matMatOut, const float32 i_fWidth, con
 	return matMatrix44OrthoOffCenterRH( o_matMatOut, -i_fWidth * 0.5f, i_fWidth * 0.5f, -i_fHeight * 0.5f, i_fHeight * 0.5f, i_fZNear, i_fZFar );
 }
 
+// 类似Dx的方式，计算投影矩阵
 matrix44 &matMatrix44PerspectiveFovLH( matrix44 &o_matMatOut, const float32 i_fFOVY, const float32 i_fAspect, const float32 i_fZNear, const float32 i_fZFar )
 {
 	const float32 fViewSpaceHeight = 1.0f / tanf( i_fFOVY * 0.5f );
@@ -401,6 +402,7 @@ matrix44 &matMatrix44PerspectiveOffCenterRH( matrix44 &o_matMatOut, const float3
 	return o_matMatOut;
 }
 
+// 类似于DX的方式，计算Viewport矩阵
 matrix44 &matMatrix44Viewport( matrix44 &o_matMatOut, const uint32 i_iX, const uint32 i_iY, const uint32 i_iWidth, const uint32 i_iHeight, const float32 i_fZNear, const float32 i_fZFar )
 {
 	o_matMatOut._11 = (float32)i_iWidth * 0.5f; o_matMatOut._12 = 0.0f; o_matMatOut._13 = 0.0f; o_matMatOut._14 = 0.0f;
