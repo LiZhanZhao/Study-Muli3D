@@ -289,6 +289,7 @@ matrix44 &matMatrix44RotationQuaternion( matrix44 &o_matMatOut, const struct qua
 	return o_matMatOut;
 }
 
+// 类似Dx的方式，计算相机变换
 matrix44 &matMatrix44LookAtLH( matrix44 &o_matMatOut, const vector3 &i_vEye, const vector3 &i_vAt, const vector3 &i_vUp )
 {
 	const vector3 vZAxis = (i_vAt - i_vEye).normalize();
