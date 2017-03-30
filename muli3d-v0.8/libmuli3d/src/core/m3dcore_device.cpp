@@ -584,13 +584,14 @@ result CMuli3DDevice::CreateVertexFormat( CMuli3DVertexFormat **o_ppVertexFormat
 		return e_invalidparameters;
 	}
 
+	// สตภýปฏ CMuli3DVertexFormat
 	*o_ppVertexFormat = new CMuli3DVertexFormat( this );
 	if( !(*o_ppVertexFormat) )
 	{
 		FUNC_FAILING( "CMuli3DDevice::CreateVertexFormat: out of memory, cannot create vertex format.\n" );
 		return e_outofmemory;
 	}
-
+	// i_pVertexDeclaration -> array
 	result resCreate = (*o_ppVertexFormat)->Create( i_pVertexDeclaration, i_iVertexDeclSize );
 	if( FUNC_FAILED( resCreate ) )
 	{

@@ -12,6 +12,8 @@
 // TODO: implement scene-graph
 
 typedef uint32 HENTITY;
+
+// ¿‡À∆C# delegate
 typedef class IEntity *(*PCREATEFUNCTION)( class CScene *i_pParent );
 
 typedef uint32 HLIGHT;
@@ -29,8 +31,9 @@ protected:
 
 public:
 	void RegisterEntityType( string i_sTypeName, PCREATEFUNCTION i_pCreateFunction );
-	
-	HENTITY hCreateEntity( string i_sTypeName, bool i_bSceneProcess = true ); // if i_bSceneProcess is false, then the scene will not automatically call framemove/render - suited for sub-models
+
+	// if i_bSceneProcess is false, then the scene will not automatically call framemove/render - suited for sub-models
+	HENTITY hCreateEntity( string i_sTypeName, bool i_bSceneProcess = true ); 
 	class IEntity *pGetEntity( HENTITY i_hEntity );
 	void ReleaseEntity( HENTITY i_hEntity );
 
@@ -63,6 +66,7 @@ private:
 	vector4	m_vClearColor;
 	vector4	m_vAmbientLightColor;
 
+	// entiryType to create function
 	map<string, PCREATEFUNCTION>	m_RegisteredEntityTypes;
 
 	struct tSceneEntity
@@ -71,6 +75,7 @@ private:
 		class IEntity	*pEntity;
 		bool			bSceneProcess;
 	};
+	// scene entities list
 	vector<tSceneEntity>	m_SceneEntities;
 	uint32					m_iNumCreatedEntities;
 

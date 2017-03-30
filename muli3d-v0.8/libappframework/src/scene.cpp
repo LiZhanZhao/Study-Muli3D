@@ -13,6 +13,7 @@ CScene::CScene( IApplication *i_pParent )
 	m_iNumCreatedLights = 0;
 
 	SetClearColor( vector4( 0.30f, 0.25f, 0.35f, 1 ) );
+	// »·¾³ÑÕÉ«
 	SetAmbientLightColor( vector4( 0, 0, 0, 1 ) );
 
 	m_iCurLight = 0;
@@ -33,6 +34,7 @@ bool CScene::bInitialize()
 
 void CScene::RegisterEntityType( string i_sTypeName, PCREATEFUNCTION i_pCreateFunction )
 {
+	// this is map, 
 	m_RegisteredEntityTypes[i_sTypeName] = i_pCreateFunction;
 }
 
@@ -47,6 +49,7 @@ HENTITY CScene::hCreateEntity( string i_sTypeName, bool i_bSceneProcess )
 		return 0;
 
 	tSceneEntity newEntity = { ++m_iNumCreatedEntities, pEntity, i_bSceneProcess };
+
 	m_SceneEntities.push_back( newEntity );
 	return newEntity.hEntity;
 }
@@ -80,6 +83,7 @@ void CScene::ReleaseEntity( HENTITY i_hEntity )
 
 IEntity *CScene::pGetEntity( HENTITY i_hEntity )
 {
+	// find i_hEntity in m_SceneEntities
 	vector<tSceneEntity>::iterator pSceneEntity = pSceneEntityIterator( i_hEntity );
 	if( pSceneEntity != m_SceneEntities.end() )
 		return pSceneEntity->pEntity;

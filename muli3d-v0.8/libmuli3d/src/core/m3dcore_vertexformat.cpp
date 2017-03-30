@@ -40,7 +40,7 @@ result CMuli3DVertexFormat::Create( const m3dvertexelement *i_pVertexDeclaration
 		FUNC_FAILING( "CMuli3DVertexFormat::Create: parameter i_iVertexDeclSize is 0.\n" );
 		return e_invalidparameters;
 	}
-
+	// i_pVertexDeclaration array length
 	m_iNumVertexElements = i_iVertexDeclSize / sizeof( m3dvertexelement );
 	m_iHighestStream = 0;
 
@@ -68,14 +68,14 @@ result CMuli3DVertexFormat::Create( const m3dvertexelement *i_pVertexDeclaration
 		if( pCurElement->iStream > m_iHighestStream )
 			m_iHighestStream = pCurElement->iStream;
 	}
-
+	// 顶点的属性数组
 	m_pElements = new m3dvertexelement[m_iNumVertexElements];
 	if( !m_pElements )
 	{
 		FUNC_FAILING( "CMuli3DVertexFormat::Create: out of memory, cannot create vertex element data.\n" );
 		return e_outofmemory;
 	}
-
+	// 把外部的 i_pVertexDeclaration 参数 拷贝到 m_pElements
 	memcpy( m_pElements, i_pVertexDeclaration, sizeof( m3dvertexelement ) * m_iNumVertexElements );
 
 	return s_ok;

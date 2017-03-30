@@ -134,6 +134,7 @@ bool CTriangle::bInitialize( const vertexformat *i_pVertices, string i_sTexture,
 	CGraphics *pGraphics = m_pParent->pGetParent()->pGetGraphics();
 	CMuli3DDevice *pM3DDevice = pGraphics->pGetM3DDevice();
 
+	// create VertexFormat, VertexDeclaration 声明 顶点属性数组
 	if( FUNC_FAILED( pM3DDevice->CreateVertexFormat( &m_pVertexFormat, VertexDeclaration, sizeof( VertexDeclaration ) ) ) )
 		return false;
 

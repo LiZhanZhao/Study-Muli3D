@@ -44,6 +44,8 @@ bool CDisplacedTri::bCreateWorld()
 
 	// Register triangle-entity and create an instance ------------------------
 	pGetScene()->RegisterEntityType( "triangle", CTriangle::pCreate );
+
+	// Call CTriangle::pCreate to create entity triangle
 	m_hTriangle = pGetScene()->hCreateEntity( "triangle" );
 	if( !m_hTriangle )
 		return false;
