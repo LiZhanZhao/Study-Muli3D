@@ -259,6 +259,7 @@ matrix44 &matMatrix44RotationAxis( matrix44 &o_matMatOut, const vector3 &i_vAxis
 	return o_matMatOut;
 }
 
+// Quaternion -> Matrix
 matrix44 &matMatrix44RotationQuaternion( matrix44 &o_matMatOut, const struct quaternion &i_qQuat )
 {
 	// transposed version from http://www.gamedev.net/reference/articles/article1199.asp

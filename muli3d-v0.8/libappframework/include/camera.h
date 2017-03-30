@@ -70,6 +70,7 @@ public:
 	{ 
 		matrix44 matTemp; 
 		matMatrix44LookAtLH( matTemp, m_vPosition, i_vPosition, i_vUp ); 
+		// Matrix -> Quaternion
 		qQuaternionRotationMatrix( m_qOrientation, matTemp ); 
 	}
 	inline void SetOrientation( const quaternion &i_qOrientation ) { m_qOrientation = i_qOrientation; }

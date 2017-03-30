@@ -28,6 +28,7 @@ quaternion &qQuaternionIdentity( quaternion &o_qQuatOut )
 	return o_qQuatOut;
 }
 
+// Matrix -> Quaternion
 quaternion &qQuaternionRotationMatrix( quaternion &o_qQuatOut, const matrix44 &i_matMatrix )
 {
 	// http://www.gamasutra.com/features/19980703/quaternions_01.htm
