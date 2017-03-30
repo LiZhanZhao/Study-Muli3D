@@ -134,23 +134,27 @@ bool CTriangle::bInitialize( const vertexformat *i_pVertices, string i_sTexture,
 	CGraphics *pGraphics = m_pParent->pGetParent()->pGetGraphics();
 	CMuli3DDevice *pM3DDevice = pGraphics->pGetM3DDevice();
 
-	// create VertexFormat, VertexDeclaration 声明 顶点属性数组
+	// create VertexFormat, VertexDeclaration 顶点属性声明(vertex怎么读入Shader相关)
 	if( FUNC_FAILED( pM3DDevice->CreateVertexFormat( &m_pVertexFormat, VertexDeclaration, sizeof( VertexDeclaration ) ) ) )
 		return false;
 
+	// create VertexBuffer, 存储all Vertex 需要大多的内存(vertex的位置，UV，法线，切线)
 	if( FUNC_FAILED( pM3DDevice->CreateVertexBuffer( &m_pVertexBuffer, sizeof( vertexformat ) * 3 ) ) )
 		return false;
 
+	// 获得vertexBuffer的地址
 	vertexformat *pDest = 0;
 	if( FUNC_FAILED( m_pVertexBuffer->GetPointer( 0, (void **)&pDest ) ) )
 		return false;
 
+	// 把外部的i_pVertices顶点数据塞到vertexbuffer中
 	memcpy( pDest, i_pVertices, sizeof( vertexformat ) * 3 );
 
 	// Calculate triangle normal ...
 	vector3 v01 = pDest[1].vPosition - pDest[0].vPosition;
 	vector3 v02 = pDest[2].vPosition - pDest[0].vPosition;
 	vector3 vNormal; vVector3Cross( vNormal, v01, v02 );
+	// all vertex normal is same
 	pDest[0].vNormal = pDest[1].vNormal = pDest[2].vNormal = vNormal;
 
 	// Calculate triangle tangent ...

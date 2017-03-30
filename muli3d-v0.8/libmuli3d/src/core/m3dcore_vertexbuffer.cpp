@@ -35,7 +35,7 @@ result CMuli3DVertexBuffer::Create( uint32 i_iLength )
 	}
 
 	m_iLength = i_iLength;
-
+	// new memory
 	m_pData = new byte[i_iLength];
 	if( !m_pData )
 	{

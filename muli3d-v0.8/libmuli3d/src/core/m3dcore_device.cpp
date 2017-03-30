@@ -634,14 +634,14 @@ result CMuli3DDevice::CreateVertexBuffer( CMuli3DVertexBuffer **o_ppVertexBuffer
 		FUNC_FAILING( "CMuli3DDevice::CreateVertexBuffer: parameter o_ppVertexBuffer points to null.\n" );
 		return e_invalidparameters;
 	}
-
+	// สตภýปฏ CMuli3DVertexBuffer
 	*o_ppVertexBuffer = new CMuli3DVertexBuffer( this );
 	if( !(*o_ppVertexBuffer) )
 	{
 		FUNC_FAILING( "CMuli3DDevice::CreateVertexBuffer: out of memory, cannot create vertexbuffer.\n" );
 		return e_outofmemory;
 	}
-
+	// CMuli3DVertexBuffer new memory
 	result resCreate = (*o_ppVertexBuffer)->Create( i_iLength );
 	if( FUNC_FAILED( resCreate ) )
 	{
