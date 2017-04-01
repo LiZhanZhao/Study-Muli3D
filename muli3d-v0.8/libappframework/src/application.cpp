@@ -59,6 +59,7 @@ bool IApplication::bCreateSubSystems( const tCreationFlags &i_creationFlags )
 
 	// NOTE: should handle possible failing! maybe bad_alloc...
 
+	// m_pInput ³õÊ¼»¯ DirectInput
 	if( !m_pInput->bInitialize() )
 		return false;
 

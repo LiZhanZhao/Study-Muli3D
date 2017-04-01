@@ -93,6 +93,7 @@ void CDisplacedTri::DestroyWorld()
 void CDisplacedTri::FrameMove()
 {
 #ifdef WIN32
+	// 判断是否按下esc.按下就退出
 	if( pGetInput()->bKeyDown( DIK_ESCAPE ) )
 		PostQuitMessage( 0 );
 #endif
@@ -118,9 +119,11 @@ void CDisplacedTri::FrameMove()
 #ifdef WIN32
 	if( m_hLight && GetFocus() )
 	{
+		// 获得鼠标光标的位置
 		POINT pt; GetCursorPos( &pt );
 		ScreenToClient( hGetWindowHandle(), &pt );
 
+		// 主要是每一帧都在根据鼠标位置改变light的位置
 		vector3 vLightPos;
 		vLightPos.x = (float32)pt.x / (float32)iGetWindowWidth() * 2.0f - 1.0f;
 		vLightPos.y = (float32)pt.y / (float32)iGetWindowHeight() * 2.0f - 1.0f;
