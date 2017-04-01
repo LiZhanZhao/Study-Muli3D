@@ -67,6 +67,7 @@ bool CDisplacedTri::bCreateWorld()
 	if( !m_hLight )
 		return false;
 
+	// 设置Light的参数
 	CLight *pLight = pGetScene()->pGetLight( m_hLight );
 	pLight->SetPosition( vector3( 0, 0, -1 ) );
 	pLight->SetColor( vector4( 1, 1, 1, 1 ) );

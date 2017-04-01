@@ -93,6 +93,7 @@ IEntity *CScene::pGetEntity( HENTITY i_hEntity )
 HLIGHT CScene::hCreateLight()
 {
 	tSceneLight newLight = { ++m_iNumCreatedEntities, new CLight( this ) };
+	// ³¡¾°Light
 	m_SceneLights.push_back( newLight );
 	return newLight.hLight;
 }
