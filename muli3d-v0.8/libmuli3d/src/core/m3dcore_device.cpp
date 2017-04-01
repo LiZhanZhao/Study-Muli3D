@@ -687,13 +687,14 @@ result CMuli3DDevice::CreateTexture( CMuli3DTexture **o_ppTexture, uint32 i_iWid
 		return e_invalidparameters;
 	}
 
+	// 实例化
 	*o_ppTexture = new CMuli3DTexture( this );
 	if( !(*o_ppTexture) )
 	{
 		FUNC_FAILING( "CMuli3DDevice::CreateTexture: out of memory, cannot create texture.\n" );
 		return e_outofmemory;
 	}
-
+	// 初始化 o_ppTexture 
 	result resCreate = (*o_ppTexture)->Create( i_iWidth, i_iHeight, i_iMipLevels, i_fmtFormat );
 	if( FUNC_FAILED( resCreate ) )
 	{

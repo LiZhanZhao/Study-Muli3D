@@ -114,6 +114,7 @@ bool bLoadPNGTexture( CMuli3DTexture **o_ppTexture, const byte *i_pData, CMuli3D
 	bool bHasAlpha = (color_type == PNG_COLOR_TYPE_RGB_ALPHA);
 	m3dformat fmtTextureFormat = bHasAlpha ? m3dfmt_r32g32b32a32f : m3dfmt_r32g32b32f;
 	
+	// create Texture
 	if( FUNC_FAILED( i_pDevice->CreateTexture( o_ppTexture, iDimX, iDimY, 0, fmtTextureFormat ) ) )
 	{
 		png_destroy_read_struct( &png_ptr, &info_ptr, &end_info );
@@ -138,6 +139,7 @@ bool bLoadPNGTexture( CMuli3DTexture **o_ppTexture, const byte *i_pData, CMuli3D
 	png_destroy_read_struct( &png_ptr, &info_ptr, &end_info );
 
 	float32 *pTexData = 0;
+	// pTexData 指向了texture.m_ppMipLevels[i_iMipLevel]的data内存块.
 	result resLock = (*o_ppTexture)->LockRect( 0, (void **)&pTexData, 0 );
 	if( FUNC_FAILED( resLock ) )
 	{
@@ -145,6 +147,7 @@ bool bLoadPNGTexture( CMuli3DTexture **o_ppTexture, const byte *i_pData, CMuli3D
 		return false;
 	}
 
+	// 往Texture的surface填充数据
 	const float32 fColorScale = 1.0f / 255.0f;
 
 	pCurData = pData;
@@ -173,16 +176,19 @@ void *pLoadTexture( CResManager *i_pParent, string i_sFilename )
 	CFileIO *pFileIO = pGraphics->pGetParent()->pGetFileIO();
 	
 	byte *pData = 0;
+	// 读取文件内容
 	uint32 iLength = pFileIO->iReadFile( i_sFilename, &pData );
 	if( !iLength )
 		return 0;
 
 	CMuli3DTexture *pTexture = 0;
+	// 理解为：create pTexture， 填充pTexture 数据
 	bool bResult = bLoadPNGTexture( &pTexture, pData, pGraphics->pGetM3DDevice() );
 	SAFE_DELETE_ARRAY( pData );
 	if( !bResult )
 		return 0;
 
+	// Generates mip-sublevels through downsampling (using a box-filter) a given source mip-level.
 	pTexture->GenerateMipSubLevels( 0 );
 
 	return new CTexture( g_pResManager, pTexture );
@@ -422,6 +428,7 @@ void CResManager::RegisterResourceExtension( string i_sExtension, PLOADFUNCTION 
 
 HRESOURCE CResManager::hLoadResource( string i_sFilename )
 {
+	// 查缓存
 	// Look if we have already loaded this resource ---------------------------
 	for( vector<tManagedResource>::iterator pManagedResource = m_ManagedResources.begin(); pManagedResource != m_ManagedResources.end(); ++pManagedResource )
 	{
@@ -433,6 +440,8 @@ HRESOURCE CResManager::hLoadResource( string i_sFilename )
 	} 
 
 	// We have to load it from the disk ---------------------------------------
+
+	// 或者'.'字符的index
 	const char *pCheck = i_sFilename.c_str();
 	const char *pExt = 0;
 	while( *pCheck )
@@ -445,13 +454,16 @@ HRESOURCE CResManager::hLoadResource( string i_sFilename )
 	if( !pExt )
 		return 0;
 
+	// 文件后缀
 	string sExtension = (pExt + 1);
+	// 获得load function
 	PLOADFUNCTION pLoadFunction = m_RegisteredEntityExtensionsLoad[sExtension];
 	if( !pLoadFunction )
 		return 0;
 
 	g_pResManager = this;
 
+	// 加载资源，添加到缓存中
 	tManagedResource newResource;
 	newResource.pResource = pLoadFunction( this, i_sFilename );
 	if( !newResource.pResource )

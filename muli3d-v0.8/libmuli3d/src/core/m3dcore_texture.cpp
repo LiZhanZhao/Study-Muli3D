@@ -63,7 +63,7 @@ result CMuli3DTexture::Create( uint32 i_iWidth, uint32 i_iHeight, uint32 i_iMipL
 		}
 		while( iWidth && iHeight );
 	}
-
+	// CMuli3DTexture 主要是 有m_ppMipLevels(CMuli3DSurface数组)
 	m_ppMipLevels = new CMuli3DSurface *[i_iMipLevels];
 	if( !m_ppMipLevels )
 	{

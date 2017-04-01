@@ -36,7 +36,9 @@ public:
 private:
 	class IApplication *m_pParent;
 
+	// load func map
 	map<string, PLOADFUNCTION>			m_RegisteredEntityExtensionsLoad;
+	// unload func map
 	map<string, PUNLOADFUNCTION>		m_RegisteredEntityExtensionsUnload;
 
 	struct tManagedResource
