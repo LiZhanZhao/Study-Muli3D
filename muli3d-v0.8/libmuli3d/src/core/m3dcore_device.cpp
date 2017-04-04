@@ -144,7 +144,9 @@ void CMuli3DDevice::SetDefaultClippingPlanes()
 	m_RenderInfo.ClippingPlanes[m3dcp_right] = plane( -1, 0, 0, 1 );
 	m_RenderInfo.ClippingPlanes[m3dcp_top] = plane( 0, -1, 0, 1 );
 	m_RenderInfo.ClippingPlanes[m3dcp_bottom] = plane( 0, 1, 0, 1 );
+	// 这里的near plane.d = 0,
 	m_RenderInfo.ClippingPlanes[m3dcp_near] = plane( 0, 0, 1, 0 );
+	// 这里的far plane.d = 1
 	m_RenderInfo.ClippingPlanes[m3dcp_far] = plane( 0, 0, -1, 1 );
 
 	// Enable the default clipping planes ...
