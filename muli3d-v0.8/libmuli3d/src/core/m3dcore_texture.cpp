@@ -293,6 +293,7 @@ result CMuli3DTexture::SampleTexture( vector4 &o_vColor, float32 i_fU, float32 i
 		}
 	}
 
+	// SetDefaultTextureSamplerStates 设置默认值
 	const float32 fMipLODBias = *(float32 *)&i_pSamplerStates[m3dtss_miplodbias];
 	const float32 fMaxMipLevel = *(float32 *)&i_pSamplerStates[m3dtss_maxmiplevel];
 	fTexMipLevel = fClamp( fTexMipLevel + fMipLODBias, 0.0f, fMaxMipLevel );
@@ -321,8 +322,10 @@ result CMuli3DTexture::SampleTexture( vector4 &o_vColor, float32 i_fU, float32 i
 	else
 	{
 		uint32 iMipLevel = ftol( fTexMipLevel );
+		// m_iMipLevels 表示Texture的mipLevel的数量
 		if( iMipLevel >= m_iMipLevels ) iMipLevel = m_iMipLevels - 1;
 
+		// 这里进行的是 MipLevels 采样
 		if( iTexFilter == m3dtf_linear )
 			m_ppMipLevels[iMipLevel]->SampleLinear( o_vColor, i_fU, i_fV );
 		else

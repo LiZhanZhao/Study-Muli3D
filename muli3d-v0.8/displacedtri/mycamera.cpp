@@ -19,6 +19,7 @@ void CMyCamera::RenderPass( int32 i_iPass )
 		uint32 iNumLights = pScene->iGetNumLights();
 		for( uint32 i = 0; i < iNumLights; ++i )
 		{
+			// 设置当前的Light Index
 			pScene->SetCurrentLight( i );
 			pScene->Render( ePass_Lighting );
 		}

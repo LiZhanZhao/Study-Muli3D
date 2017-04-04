@@ -166,9 +166,11 @@ result CStateBlock::SetVertexStream( uint32 i_iStreamNumber, CMuli3DVertexBuffer
 	CMuli3DDevice *pM3DDevice = m_pParent->pGetM3DDevice();
 
 	// Record state if not yet saved ------------------------------------------
+	// 如果在stateBlock的缓存中找不到VertexStream的话
 	if( m_VertexStreams.find( i_iStreamNumber ) == m_VertexStreams.end() )
 	{
 		tVertexStreamInfo streamInfo;
+		// 如果在pM3DDevice中找到对应的VertexStream，就
 		if( !FUNC_FAILED( pM3DDevice->GetVertexStream( i_iStreamNumber, &streamInfo.pVertexBuffer, &streamInfo.iOffset, &streamInfo.iStride ) ) )
 		{
 			if( streamInfo.pVertexBuffer == i_pVertexBuffer &&
@@ -178,7 +180,7 @@ result CStateBlock::SetVertexStream( uint32 i_iStreamNumber, CMuli3DVertexBuffer
 				SAFE_RELEASE( streamInfo.pVertexBuffer );
 				return s_ok;
 			}
-
+			// 把streamInfo存到stateBlock.m_VertexStreams中
 			m_VertexStreams[i_iStreamNumber] = streamInfo;
 		}
 	}
@@ -248,10 +250,12 @@ void CStateBlock::SetRenderTarget( CMuli3DRenderTarget *i_pRenderTarget )
 {
 	CMuli3DDevice *pM3DDevice = m_pParent->pGetM3DDevice();
 
+	// 记录状态
 	// Record state if not yet saved ------------------------------------------
 	if( !m_bChangedRenderTarget )
 	{
 		m_pRenderTarget = pM3DDevice->pGetRenderTarget();
+		// 如果同时有两个RenderTexture的话，就需要计数器减少1
 		if( i_pRenderTarget == m_pRenderTarget )
 		{
 			SAFE_RELEASE( m_pRenderTarget );
@@ -260,7 +264,7 @@ void CStateBlock::SetRenderTarget( CMuli3DRenderTarget *i_pRenderTarget )
 
 		m_bChangedRenderTarget = true;
 	}
-
+	// 设置renderTexture
 	pM3DDevice->SetRenderTarget( i_pRenderTarget );
 }
 

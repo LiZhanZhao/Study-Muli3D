@@ -148,13 +148,17 @@ void CScene::FrameMove()
 void CScene::Render( uint32 i_iPass )
 {
 	CGraphics *pGraphics = pGetParent()->pGetGraphics();
+	// 遍历scene all entity
 	for( vector<tSceneEntity>::iterator pSceneEntity = m_SceneEntities.begin(); pSceneEntity != m_SceneEntities.end(); ++pSceneEntity )
 	{
 		if( !pSceneEntity->bSceneProcess )
 			continue;
 
+		// push new StateBlock in StateBlock stack
 		pGraphics->PushStateBlock();
+		// 跳到每一个entity的Render函数
 		pSceneEntity->pEntity->Render( i_iPass );
+		// pop top StateBlock in StateBlock stack
 		pGraphics->PopStateBlock();
 	}
 }

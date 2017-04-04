@@ -54,8 +54,11 @@ CMuli3DDevice::CMuli3DDevice( CMuli3D *i_pParent, const m3ddeviceparameters *i_p
 	memset( &m_ClipVertices, 0, sizeof( m_ClipVertices ) );
 	memset( &m_pClipVertices, 0, sizeof( m_pClipVertices ) );
 
+	// 设置默认的RenderState
 	SetDefaultRenderStates();
+	// 设置默认的Texture Sampler States
 	SetDefaultTextureSamplerStates();
+	// 设置默认的Clipping Planes
 	SetDefaultClippingPlanes();
 }
 
@@ -232,6 +235,7 @@ result CMuli3DDevice::SetVertexShader( IMuli3DVertexShader *i_pVertexShader )
 	}
 
 	// Validate vertex shader register output types *phew*
+	//  先验证i_pVertexShader
 	for( uint32 iReg = 0; iReg < c_iPixelShaderRegisters; ++iReg )
 	{
 		uint32 iType = i_pVertexShader->GetOutputRegisters( iReg );
@@ -315,7 +319,7 @@ result CMuli3DDevice::SetVertexStream( uint32 i_iStreamNumber, CMuli3DVertexBuff
 		FUNC_FAILING( "CMuli3DDevice::SetVertexStream: stride is 0.\n" );
 		return e_invalidparameters;
 	}
-
+	// device m_VertexStreams存储VertexStreams
 	m_VertexStreams[i_iStreamNumber].pVertexBuffer = i_pVertexBuffer;
 	m_VertexStreams[i_iStreamNumber].iOffset = i_iOffset;
 	m_VertexStreams[i_iStreamNumber].iStride = i_iStride;
@@ -429,7 +433,7 @@ result CMuli3DDevice::SampleTexture( vector4 &o_vColor, uint32 i_iSamplerNumber,
 		FUNC_FAILING( "CMuli3DDevice::SampleTexture: i_iSamplerNumber exceeds number of available texture samplers.\n" );
 		return e_invalidparameters;
 	}
-
+	// texture
 	const texturesampler &TextureSampler = m_TextureSamplers[i_iSamplerNumber];
 
 	IMuli3DBaseTexture *pTexture = TextureSampler.pTexture;
@@ -459,6 +463,7 @@ result CMuli3DDevice::SampleTexture( vector4 &o_vColor, uint32 i_iSamplerNumber,
 		}
 
 	case m3dtsi_2coords:
+		// 采样模式wrap和clamp
 		switch( TextureSampler.iTextureSamplerStates[m3dtss_addressu] )
 		{
 		case m3dta_wrap: i_fU -= ftol( i_fU );
@@ -861,24 +866,27 @@ result CMuli3DDevice::Present( CMuli3DRenderTarget *i_pRenderTarget )
 
 result CMuli3DDevice::PreRender()
 {
+	// 验证 m_pVertexFormat
 	if( !m_pVertexFormat )
 	{
 		FUNC_FAILING( "CMuli3DDevice::PreRender: no vertex format has been set.\n" );
 		return e_invalidstate;
 	}
 
+	// 验证 m_pVertexShader
 	if( !m_pVertexShader )
 	{
 		FUNC_FAILING( "CMuli3DDevice::PreRender: no vertex shader has been set.\n" );
 		return e_invalidstate;
 	}
 
+	// 验证 m_pPixelShader
 	if( !m_pPixelShader )
 	{
 		FUNC_FAILING( "CMuli3DDevice::PreRender: no pixel shader has been set.\n" );
 		return e_invalidstate;
 	}
-
+	// 验证 m_pRenderTarget
 	if( !m_pRenderTarget )
 	{
 		FUNC_FAILING( "CMuli3DDevice::PreRender: no rendertarget has been set.\n" );
@@ -891,6 +899,7 @@ result CMuli3DDevice::PreRender()
 	m_RenderInfo.ViewportRect.iTop = (uint32)(matViewportMatrix._42 + matViewportMatrix._22);
 	m_RenderInfo.ViewportRect.iBottom = (uint32)(matViewportMatrix._42 - matViewportMatrix._22);
 
+	// 验证m_pRenderTarget  Viewport
 	if( m_RenderInfo.ViewportRect.iLeft >= m_RenderInfo.ViewportRect.iRight ||
 		m_RenderInfo.ViewportRect.iTop >= m_RenderInfo.ViewportRect.iBottom )
 	{
@@ -898,6 +907,7 @@ result CMuli3DDevice::PreRender()
 		return e_invalidstate;
 	}
 
+	// 验证 m_pRenderTarget 的ColorBuffer 和 DepthBuffer
 	CMuli3DSurface *pColorBuffer = m_pRenderTarget->pGetColorBuffer();
 	CMuli3DSurface *pDepthBuffer = m_pRenderTarget->pGetDepthBuffer();
 	if( !pColorBuffer && !pDepthBuffer )
@@ -927,6 +937,7 @@ result CMuli3DDevice::PreRender()
 	SAFE_RELEASE( pColorBuffer );
 	SAFE_RELEASE( pDepthBuffer );
 
+	// 验证 vertexstream's pVertexBuffer
 	const vertexstream *pCurVertexStream = m_VertexStreams;
 	for( uint32 iStream = 0; iStream <= m_pVertexFormat->iGetHighestStream(); ++iStream, ++pCurVertexStream )
 	{
@@ -936,6 +947,8 @@ result CMuli3DDevice::PreRender()
 			return e_invalidstate;
 		}
 	}
+
+	// 验证 m_iRenderStates
 
 	// Check status of scissor-testing ----------------------------------------
 	if( m_iRenderStates[m3drs_scissortestenable] )
@@ -958,6 +971,7 @@ result CMuli3DDevice::PreRender()
 	}
 
 
+	// 
 	// Check if renderstates for subdivision-mode are valid -------------------
 	switch( m_iRenderStates[m3drs_subdivisionmode] )
 	{
@@ -1033,10 +1047,13 @@ result CMuli3DDevice::PreRender()
 
 	// note: m_RenderInfo.ShaderInputRegisterType is initialized when a vertex format is set
 
+	// 填充 m_RenderInfo 属性
+
 	// Store output types in the internal render-info structure.
 	for( uint32 iReg = 0; iReg < c_iPixelShaderRegisters; ++iReg )
 		m_RenderInfo.VSOutputs[iReg] = m_pVertexShader->GetOutputRegisters( iReg );
 
+	// 填充 m_RenderInfo ColorBuffer相关属性
 	// Get colorbuffer-related states -----------------------------------------
 	pColorBuffer = m_pRenderTarget->pGetColorBuffer();
 	if( pColorBuffer )
@@ -1068,6 +1085,7 @@ result CMuli3DDevice::PreRender()
 		m_RenderInfo.bColorWrite = false;
 	}
 
+	// 填充 m_RenderInfo DepthBuffer相关属性
 	// Get depthbuffer-related states -----------------------------------------
 	pDepthBuffer = m_iRenderStates[m3drs_zenable] ? m_pRenderTarget->pGetDepthBuffer() : 0;
 	if( pDepthBuffer )
@@ -1102,10 +1120,14 @@ result CMuli3DDevice::PreRender()
 
 	// Depending on m_pPixelShader->GetShaderOutput() chose the appropriate
 	// RasterizeScanline-function and assign it to the function pointer
+
+	// 初始化光栅化函数
 	switch( m_pPixelShader->GetShaderOutput() )
 	{
 	case m3dpso_coloronly:
-		m_RenderInfo.fpRasterizeScanline = m_pPixelShader->bMightKillPixels() ? &CMuli3DDevice::RasterizeScanline_ColorOnly_MightKillPixels : &CMuli3DDevice::RasterizeScanline_ColorOnly;
+		m_RenderInfo.fpRasterizeScanline = m_pPixelShader->bMightKillPixels() ? 
+			&CMuli3DDevice::RasterizeScanline_ColorOnly_MightKillPixels : 
+			&CMuli3DDevice::RasterizeScanline_ColorOnly;
 		m_RenderInfo.fpDrawPixel = &CMuli3DDevice::DrawPixel_ColorOnly;
 		break;
 	case m3dpso_colordepth:
@@ -1161,9 +1183,11 @@ void CMuli3DDevice::PostRender()
 result CMuli3DDevice::DecodeVertexStream( m3dvsinput &o_VertexShaderInput, uint32 i_iVertex )
 {
 	const byte *pVertex[c_iMaxVertexStreams];
+	// 获得vertex stream
 	const vertexstream *pCurVertexStream = m_VertexStreams;
 	for( uint32 iStream = 0; iStream <= m_pVertexFormat->iGetHighestStream(); ++iStream, ++pCurVertexStream )
 	{
+		// 验证 vertecStream
 		const uint32 iOffset = pCurVertexStream->iOffset + i_iVertex * pCurVertexStream->iStride;
 		if( iOffset >= pCurVertexStream->pVertexBuffer->iGetLength() )
 		{
@@ -1171,6 +1195,7 @@ result CMuli3DDevice::DecodeVertexStream( m3dvsinput &o_VertexShaderInput, uint3
 			return e_unknown;
 		}
 
+		// 获得vertex buffer 的offset 的指针，保存到 pVertex中
 		result resVB = pCurVertexStream->pVertexBuffer->GetPointer( iOffset, (void **)&pVertex[iStream] );
 		if( FUNC_FAILED( resVB ) )
 			return resVB;
@@ -1226,6 +1251,7 @@ result CMuli3DDevice::FetchVertex( m3dvertexcacheentry **io_ppVertex, uint32 i_i
 	m3dvertexcacheentry *pCacheEntry = &m_VertexCache[0], *pDestEntry = pCacheEntry;
 	for( uint32 iCurEntry = 0; iCurEntry < m_iNumValidCacheEntries; ++iCurEntry, ++pCacheEntry )
 	{
+		// 利用顶点索引判断
 		if( pCacheEntry->iVertexIndex == i_iVertex )
 		{
 			// Vertex is already in cache, return it.
@@ -1248,11 +1274,13 @@ result CMuli3DDevice::FetchVertex( m3dvertexcacheentry **io_ppVertex, uint32 i_i
 	// Update the destination cache entry and return it -----------------------
 	pDestEntry->iVertexIndex = i_iVertex;
 	pDestEntry->iFetchTime = m_iFetchedVertices++;
-
+	// 填充 pDestEntry->VertexOutput.SourceInput.ShaderInputs
 	result resDecode = DecodeVertexStream( pDestEntry->VertexOutput.SourceInput, i_iVertex );
 	if( FUNC_FAILED( resDecode ) )
 		return resDecode;
 
+	// pDestEntry->VertexOutput.SourceInput.ShaderInputs 就是没有经过任何变换的顶点
+	// pDestEntry->VertexOutput.ShaderOutputs 理解为vs 输出的 顶点属性
 	m_pVertexShader->Execute( pDestEntry->VertexOutput.SourceInput.ShaderInputs,
 		pDestEntry->VertexOutput.vPosition, pDestEntry->VertexOutput.ShaderOutputs );
 
@@ -1261,11 +1289,13 @@ result CMuli3DDevice::FetchVertex( m3dvertexcacheentry **io_ppVertex, uint32 i_i
 	return s_ok;
 }
 
+/// Begins the processing-pipeline that works on a per-triangle base. Either continues to the clipping-stage or takes care of subdivision.
 inline void CMuli3DDevice::ProcessTriangle( const m3dvsoutput *i_pVSOutput0, const m3dvsoutput *i_pVSOutput1, const m3dvsoutput *i_pVSOutput2 )
 {
 	switch( m_iRenderStates[m3drs_subdivisionmode] )
 	{
 	case m3dsubdiv_none: DrawTriangle( i_pVSOutput0, i_pVSOutput1, i_pVSOutput2 ); break;
+	// 每一条边分解三角形
 	case m3dsubdiv_simple: SubdivideTriangle_Simple( 0, i_pVSOutput0, i_pVSOutput1, i_pVSOutput2 ); break;
 	case m3dsubdiv_smooth: SubdivideTriangle_Smooth( 0, i_pVSOutput0, i_pVSOutput1, i_pVSOutput2 ); break;
 	case m3dsubdiv_adaptive: SubdivideTriangle_Adaptive( i_pVSOutput0, i_pVSOutput1, i_pVSOutput2 ); break;
@@ -1290,18 +1320,25 @@ result CMuli3DDevice::DrawPrimitive( m3dprimitivetype i_PrimitiveType, uint32 i_
 	case m3dpt_trianglelist: iNumVertices = i_iPrimitiveCount * 3; break;
 	default: FUNC_FAILING( "CMuli3DDevice::DrawPrimitive: invalid primitive type specified.\n" ); return e_invalidparameters;
 	}
-
+	// 验证是否可以开始渲染
 	result resCheck = PreRender();
 	if( FUNC_FAILED( resCheck ) )
 		return resCheck;
 
+	// 顶点索引
 	uint32 iVertexIndices[3] = { i_iStartVertex, i_iStartVertex + 1, i_iStartVertex + 2 };
 	bool bFlip = false; // used when drawing tristrips
 	while( i_iPrimitiveCount-- )
 	{
+		/// Describes a structure that is used for vertex caching.
+		// 指针数组，这里就是3个数组元素的指针都是空
 		m3dvertexcacheentry *pVertices[3] = { 0, 0, 0 };
+		// 遍历3个顶点
 		for( uint32 iVertex = 0; iVertex < 3; ++iVertex )
 		{
+			// 提取vertex
+			/// Fetches a vertex from the current vertex streams and transforms it by calling the vertex shader.
+			// 提取一个vertex
 			result resFetch = FetchVertex( &pVertices[iVertex], iVertexIndices[iVertex] );
 			if( FUNC_FAILED( resFetch ) )
 			{
@@ -1553,6 +1590,7 @@ inline void CMuli3DDevice::MultiplyVertexShaderOutputRegisters( m3dvsoutput *o_p
 	const shaderreg *pSrc = i_pSrc->ShaderOutputs;
 	for( uint32 iReg = 0; iReg < c_iPixelShaderRegisters; ++iReg, ++pDest, ++pSrc )
 	{
+		// 注意，这里是没有break
 		switch( m_RenderInfo.VSOutputs[iReg] )
 		{
 		case m3dsrt_vector4:
@@ -1573,6 +1611,7 @@ inline void CMuli3DDevice::MultiplyVertexShaderOutputRegisters( m3dvsoutput *o_p
 void CMuli3DDevice::InterpolateVertexShaderInput( m3dvsinput *o_pVSInput, const m3dvsinput *i_pVSInputA, const m3dvsinput *i_pVSInputB, float32 i_fInterpolation )
 {
 	// interpolate registers
+	// 这里是一个数组来的，所以下面就需要for, ++pO, ++pA, ++pB
 	shaderreg *pO = o_pVSInput->ShaderInputs;
 	const shaderreg *pA = i_pVSInputA->ShaderInputs;
 	const shaderreg *pB = i_pVSInputB->ShaderInputs;
@@ -1614,16 +1653,19 @@ inline void CMuli3DDevice::ProjectVertex( m3dvsoutput *io_pVSOutput )
 	if( io_pVSOutput->vPosition.w < FLT_EPSILON )
 		return;
 
+	//透视除法
 	const float32 fInvW = 1.0f / io_pVSOutput->vPosition.w;
 	io_pVSOutput->vPosition.x *= fInvW;
 	io_pVSOutput->vPosition.y *= fInvW;
 	io_pVSOutput->vPosition.z *= fInvW;
 	io_pVSOutput->vPosition.w = 1.0f;
 
+	// 视口变换
 	io_pVSOutput->vPosition *= m_pRenderTarget->matGetViewportMatrix();
 
 	// divide shader output registers by w; this way we can interpolate them linearly while rasterizing ...
 	io_pVSOutput->vPosition.w = fInvW;
+	// VertexShaderOutput 除以 w
 	MultiplyVertexShaderOutputRegisters( io_pVSOutput, io_pVSOutput, io_pVSOutput->vPosition.w );
 }
 
@@ -1652,6 +1694,7 @@ void CMuli3DDevice::SubdivideTriangle_Simple( uint32 i_iSubdivisionLevel, const 
 	for( uint32 i = 0; i < 3; ++i, ++pCurVSOutput )
 		m_pVertexShader->Execute( pCurVSOutput->SourceInput.ShaderInputs, pCurVSOutput->vPosition, pCurVSOutput->ShaderOutputs );
 
+	// 递归
 	SubdivideTriangle_Simple( i_iSubdivisionLevel, i_pVSOutput0, &NewVSOutputs[0], &NewVSOutputs[2] );
 	SubdivideTriangle_Simple( i_iSubdivisionLevel, i_pVSOutput1, &NewVSOutputs[1], &NewVSOutputs[0] );
 	SubdivideTriangle_Simple( i_iSubdivisionLevel, i_pVSOutput2, &NewVSOutputs[2], &NewVSOutputs[1] );
@@ -1833,6 +1876,8 @@ inline bool CMuli3DDevice::bCullTriangle( const m3dvsoutput *i_pVSOutput0, const
 	vector3 vAC = vScreenSpacePos[2] - vScreenSpacePos[0];
 	vector3 vFaceNormal; vVector3Cross( vFaceNormal, vAB, vAC );
 	float32 fDirTest = fVector3Dot( vFaceNormal, vector3( 0, 0, 1 ) ); */
+
+	// vAB.x * vAC.y - vAB.y * vAC.x -> 和上面的一致
 	const float32 fDirTest = ( i_pVSOutput1->vPosition.x - i_pVSOutput0->vPosition.x ) * ( i_pVSOutput2->vPosition.y - i_pVSOutput0->vPosition.y ) - ( i_pVSOutput1->vPosition.y - i_pVSOutput0->vPosition.y ) * ( i_pVSOutput2->vPosition.x - i_pVSOutput0->vPosition.x );
 	if( m_iRenderStates[m3drs_cullmode] == m3dcull_ccw )
 	{
@@ -1850,7 +1895,9 @@ inline bool CMuli3DDevice::bCullTriangle( const m3dvsoutput *i_pVSOutput0, const
 
 uint32 CMuli3DDevice::iClipToPlane( uint32 i_iNumVertices, uint32 i_iSrcIndex, const plane &i_plane, bool i_bHomogenous )
 {
+	// m_pClipVertices[i_iSrcIndex] 获得 顶点数组，存储了3个顶点
 	m3dvsoutput **ppSrcVertices = m_pClipVertices[i_iSrcIndex];
+	// (i_iSrcIndex + 1) & 1 就是限定范围是[0,1],m_pClipVertices的index不能超过1
 	m3dvsoutput **ppDestVertices = m_pClipVertices[(i_iSrcIndex + 1) & 1];
 
 	uint32 iNumClippedVertices = 0;
@@ -1871,13 +1918,20 @@ uint32 CMuli3DDevice::iClipToPlane( uint32 i_iNumVertices, uint32 i_iSrcIndex, c
 			dj = i_plane * ( *(vector3 *)&ppSrcVertices[j]->vPosition );
 		}
 
+		// di 在ClipPlane 的正区域
 		if( di >= 0.0f )
 		{
 			ppDestVertices[iNumClippedVertices++] = ppSrcVertices[i];
+			// dj 在ClipPlane 的负区域
 			if( dj < 0.0f )
 			{
+				// m_ClipVertices 存储的就是3个m3dvsoutput
+				// m_iNextFreeClipVertex 开始 = 3，就是使用index = 3 以后的数据，理解为临时存放 插完值的数据
 				InterpolateVertexShaderOutput( &m_ClipVertices[m_iNextFreeClipVertex], ppSrcVertices[i], ppSrcVertices[j], di / (di - dj) );
+
+				// 保存 裁剪完的m3dvsoutput
 				ppDestVertices[iNumClippedVertices++] = &m_ClipVertices[m_iNextFreeClipVertex];
+
 				m_iNextFreeClipVertex = ( m_iNextFreeClipVertex + 1 ) % 20; // TODO: 20 enough?
 
 				#ifdef _DEBUG
@@ -1905,21 +1959,25 @@ uint32 CMuli3DDevice::iClipToPlane( uint32 i_iNumVertices, uint32 i_iSrcIndex, c
 	return iNumClippedVertices;
 }
 
+/// DrawTriangle() takes care of backface culling, triangle clipping, vertex projection and begins rasterization.
 void CMuli3DDevice::DrawTriangle( const m3dvsoutput *i_pVSOutput0, const m3dvsoutput *i_pVSOutput1, const m3dvsoutput *i_pVSOutput2 )
 {
 	// Prepare triangle for homogenous clipping -------------------------------
+	// 把参数的3个 m3dvsoutput 复制到m_ClipVertices到
 	uint32 iNumVertices = 3;
 	memcpy( &m_ClipVertices[0], i_pVSOutput0, sizeof( m3dvsoutput ) );
 	memcpy( &m_ClipVertices[1], i_pVSOutput1, sizeof( m3dvsoutput ) );
 	memcpy( &m_ClipVertices[2], i_pVSOutput2, sizeof( m3dvsoutput ) );
 	m_iNextFreeClipVertex = 3;
 
+	// 把 m_ClipVertices 复制到 m_pClipVertices[0]中
 	uint32 iStage = 0;
 	m_pClipVertices[iStage][0] = &m_ClipVertices[0];
 	m_pClipVertices[iStage][1] = &m_ClipVertices[1];
 	m_pClipVertices[iStage][2] = &m_ClipVertices[2];
 
 	// Call the triangle shader -----------------------------------------------
+	// 可选的，执行TriangleShader
 	if( m_pTriangleShader )
 	{
 		if( !m_pTriangleShader->bExecute( m_pClipVertices[0][0]->ShaderOutputs,
@@ -1930,11 +1988,17 @@ void CMuli3DDevice::DrawTriangle( const m3dvsoutput *i_pVSOutput0, const m3dvsou
 	}
 
 	// Perform clipping to the frustum planes ---------------------------------
+	// 执行 正规化的视锥体  裁剪, 
+	// 用6个plane来裁剪这3个顶点，最后的裁剪完的顶点就保存
+	// 最后的m_pClipVertices[iStage][0,1,2]中
+
 	for( uint32 iPlane = 0; iPlane < m3dcp_numplanes; ++iPlane )
 	{
+		// m_RenderInfo.bClippingPlaneEnabled 在 SetDefaultClippingPlanes设置默认值
 		if( !m_RenderInfo.bClippingPlaneEnabled[iPlane] )
 			continue;
 
+		/// iClipToPlane() clippes a polygon to the specified clipping plane.
 		iNumVertices = iClipToPlane( iNumVertices, iStage, m_RenderInfo.ClippingPlanes[iPlane], true );
 		if( iNumVertices < 3 )
 			return;
@@ -1953,6 +2017,9 @@ void CMuli3DDevice::DrawTriangle( const m3dvsoutput *i_pVSOutput0, const m3dvsou
 	// We do not have to check for culling for each sub-polygon of the triangle, as they
 	// are all in the same plane. If the first polygon is culled then all other polygons
 	// would be culled, too.
+
+	/// Performs back face culling in screen space.
+	// 背面剔除
 	if( bCullTriangle( ppSrc[0], ppSrc[1], ppSrc[2] ) )
 		return;
 
@@ -2124,7 +2191,7 @@ void CMuli3DDevice::RasterizeTriangle( const m3dvsoutput *i_pVSOutput0, const m3
 	const vector4 &vB = pVertices[1]->vPosition;
 	const vector4 &vC = pVertices[2]->vPosition;
 
-	// Calculate slopes for stepping ------------------------------------------
+	// Calculate slopes(倾斜) for stepping ------------------------------------------
 	const float32 fStepX[3] = {
 		( vB.y - vA.y > 0.0f ) ? ( vB.x - vA.x ) / ( vB.y - vA.y ) : 0.0f,
 		( vC.y - vA.y > 0.0f ) ? ( vC.x - vA.x ) / ( vC.y - vA.y ) : 0.0f,

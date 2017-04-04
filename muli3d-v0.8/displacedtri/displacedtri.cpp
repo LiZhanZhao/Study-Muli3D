@@ -155,8 +155,11 @@ void CDisplacedTri::RenderWorld()
 {
 	if( m_pCamera )
 	{
+		// ¿ªÊ¼äÖÈ¾
 		m_pCamera->BeginRender();
+		// Clear m_pRenderTarget Color and Depth Buffer
 		m_pCamera->ClearToSceneColor();
+		//
 		m_pCamera->RenderPass( -1 );
 		m_pCamera->EndRender( true );
 	}

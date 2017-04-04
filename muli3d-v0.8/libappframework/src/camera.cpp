@@ -69,9 +69,11 @@ bool CCamera::bCreateRenderCamera( uint32 i_iWidth, uint32 i_iHeight, m3dformat 
 
 void CCamera::BeginRender()
 {
+	// new stateBlock
 	m_pParent->PushStateBlock();
-
+	// 在CStateBlock, CMuli3DDevice设置RenderTarget,
 	m_pParent->SetRenderTarget( m_pRenderTarget );
+	// 在CStateBlock, CMuli3DDevice设置当前的Camera
 	m_pParent->SetCurCamera( this );
 }
 

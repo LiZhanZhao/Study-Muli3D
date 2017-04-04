@@ -68,6 +68,7 @@ result CMuli3DSurface::Create( uint32 i_iWidth, uint32 i_iHeight, m3dformat i_fm
 result CMuli3DSurface::Clear( const vector4 &i_vColor, const m3drect *i_pRect )
 {
 	m3drect ClearRect;
+	// 部分区域
 	if( i_pRect )
 	{
 		if( i_pRect->iRight > m_iWidth ||
@@ -86,6 +87,7 @@ result CMuli3DSurface::Clear( const vector4 &i_vColor, const m3drect *i_pRect )
 
 		ClearRect = *i_pRect;
 	}
+	// 整理区域
 	else
 	{
 		ClearRect.iLeft = 0; ClearRect.iTop = 0;
@@ -263,6 +265,7 @@ uint32 CMuli3DSurface::iGetFormatFloats()
 void CMuli3DSurface::SamplePoint( vector4 &o_vColor, float32 i_fU, float32 i_fV )
 {
 	const float32 fX = i_fU * m_iWidthMin1, fY = i_fV * m_iHeightMin1;
+	// ftol: float32 -> int32
 	const uint32 iPixelX = ftol( fX ), iPixelY = ftol( fY );
 
 	switch( m_fmtFormat )
@@ -347,7 +350,7 @@ void CMuli3DSurface::SampleLinear( vector4 &o_vColor, float32 i_fU, float32 i_fV
 	case m3dfmt_r32g32b32a32f:
 		{
 			const vector4 *pPixelData = (const vector4 *)m_pData;
-
+			// 双线性插值
 			static vector4 vColorRows[2];
 			vVector4Lerp( vColorRows[0], pPixelData[iIndexRows[0] + iPixelX], pPixelData[iIndexRows[0] + iPixelX2], fInterpolation[0] );
 			vVector4Lerp( vColorRows[1], pPixelData[iIndexRows[1] + iPixelX], pPixelData[iIndexRows[1] + iPixelX2], fInterpolation[0] );
