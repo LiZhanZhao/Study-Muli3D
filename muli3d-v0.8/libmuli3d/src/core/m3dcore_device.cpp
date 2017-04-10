@@ -2047,16 +2047,21 @@ void CMuli3DDevice::DrawTriangle( const m3dvsoutput *i_pVSOutput0, const m3dvsou
 		RasterizeTriangle( ppSrc[0], ppSrc[iVertex], ppSrc[iVertex + 1] );
 }
 
+// 计算三角形梯度
 void CMuli3DDevice::CalculateTriangleGradients( const m3dvsoutput *i_pVSOutput0, const m3dvsoutput *i_pVSOutput1, const m3dvsoutput *i_pVSOutput2 )
 {
+	// v1.x - v0.x, v2.x - v0.x
 	const float32 fDeltaX[2] = { i_pVSOutput1->vPosition.x - i_pVSOutput0->vPosition.x, i_pVSOutput2->vPosition.x - i_pVSOutput0->vPosition.x };
+	// v1.y - v0.y, v2.y - v0.y
 	const float32 fDeltaY[2] = { i_pVSOutput1->vPosition.y - i_pVSOutput0->vPosition.y, i_pVSOutput2->vPosition.y - i_pVSOutput0->vPosition.y };
+	// value = 1.0f / (v1.x - v0.x) * (v2.y - v0.y) - (v2.x - v0.x) * (v1.y - v0.y)
 	m_TriangleInfo.fCommonGradient = 1.0f / ( fDeltaX[0] * fDeltaY[1] - fDeltaX[1] * fDeltaY[0] );
 	m_TriangleInfo.pBaseVertex = i_pVSOutput0;
 
 	// The derivatives with respect to the y-coordinate are negated, because in screen-space the y-axis is reversed.
-
+	// v1.z - v0.z , v2.z - v0.z
 	const float32 fDeltaZ[2] = { i_pVSOutput1->vPosition.z - i_pVSOutput0->vPosition.z, i_pVSOutput2->vPosition.z - i_pVSOutput0->vPosition.z };
+	// 
 	m_TriangleInfo.fZDdx = ( fDeltaZ[0] * fDeltaY[1] - fDeltaZ[1] * fDeltaY[0] ) * m_TriangleInfo.fCommonGradient;
 	m_TriangleInfo.fZDdy = -( fDeltaZ[0] * fDeltaX[1] - fDeltaZ[1] * fDeltaX[0] ) * m_TriangleInfo.fCommonGradient;
 
