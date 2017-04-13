@@ -159,8 +159,9 @@ void CDisplacedTri::RenderWorld()
 		m_pCamera->BeginRender();
 		// Clear m_pRenderTarget Color and Depth Buffer
 		m_pCamera->ClearToSceneColor();
-		//
+		// 正在渲染
 		m_pCamera->RenderPass( -1 );
+		// 结束渲染，Present进行提交数据
 		m_pCamera->EndRender( true );
 	}
 }

@@ -833,6 +833,7 @@ result CMuli3DDevice::Present( CMuli3DRenderTarget *i_pRenderTarget )
 		return e_invalidstate;
 	}
 
+	// 验证Width和Height
 	if( pColorBuffer->iGetWidth() != m_DeviceParameters.iBackbufferWidth ||
 		pColorBuffer->iGetHeight() != m_DeviceParameters.iBackbufferHeight )
 	{
@@ -856,7 +857,11 @@ result CMuli3DDevice::Present( CMuli3DRenderTarget *i_pRenderTarget )
 		FUNC_FAILING( "CMuli3DDevice::Present: couldn't access colorbuffer.\n" );
 		return e_unknown;
 	}
-
+	// 在Window的情况下，这里就利用DrawDirect进行Present
+	// Presents the contents of a given rendertarget's colorbuffer.
+	// Copy pixels to the backbuffer-surface
+	// Unlock backbuffer-surface and surface
+	// Present the image to the screen
 	result resPresent = m_pPresentTarget->Present( pSource, iFloats );
 
 	pColorBuffer->UnlockRect();
@@ -1350,6 +1355,7 @@ result CMuli3DDevice::DrawPrimitive( m3dprimitivetype i_PrimitiveType, uint32 i_
 			}
 		}
 
+		// 里面会进行drawTriangle
 		if( bFlip )
 			ProcessTriangle( &pVertices[0]->VertexOutput, &pVertices[2]->VertexOutput, &pVertices[1]->VertexOutput );
 		else
@@ -1378,6 +1384,7 @@ result CMuli3DDevice::DrawPrimitive( m3dprimitivetype i_PrimitiveType, uint32 i_
 		}
 	}
 
+	// Unlocking frame- and depthbuffer
 	PostRender();
 
 	return s_ok;
