@@ -1665,9 +1665,10 @@ inline void CMuli3DDevice::ProjectVertex( m3dvsoutput *io_pVSOutput )
 	// 视口变换
 	io_pVSOutput->vPosition *= m_pRenderTarget->matGetViewportMatrix();
 
-	// divide shader output registers by w; this way we can interpolate them linearly while rasterizing ...
+	// **** divide shader output registers by w; this way we can interpolate them linearly while rasterizing ...
 	io_pVSOutput->vPosition.w = fInvW;
-	// VertexShaderOutput 乘以 w
+	// 因为 io_pVSOutput->vPosition.w = fInvW, 所以下面的就是，
+	// io_pVSOutput 都进行除以w
 	MultiplyVertexShaderOutputRegisters( io_pVSOutput, io_pVSOutput, io_pVSOutput->vPosition.w );
 }
 
@@ -2044,6 +2045,7 @@ void CMuli3DDevice::DrawTriangle( const m3dvsoutput *i_pVSOutput0, const m3dvsou
 	}
 
 	// ppSrc 已经经过裁剪，透视变换
+	// ppSrc.vPosition.w = 1/w
 	for( iVertex = 1; iVertex < iNumVertices - 1; ++iVertex )
 		RasterizeTriangle( ppSrc[0], ppSrc[iVertex], ppSrc[iVertex + 1] );
 }
@@ -2074,8 +2076,9 @@ void CMuli3DDevice::CalculateTriangleGradients( const m3dvsoutput *i_pVSOutput0,
 	m_TriangleInfo.fWDdx = ( fDeltaW[0] * fDeltaY[1] - fDeltaW[1] * fDeltaY[0] ) * m_TriangleInfo.fCommonGradient;
 	m_TriangleInfo.fWDdy = -( fDeltaW[0] * fDeltaX[1] - fDeltaW[1] * fDeltaX[0] ) * m_TriangleInfo.fCommonGradient;
 
-
+	// Shader register partial derivatives with respect to the screen-space x-coordinate.
 	shaderreg *pDestDdx = m_TriangleInfo.ShaderOutputsDdx;
+	// Shader register partial derivatives with respect to the screen-space y-coordinate.
 	shaderreg *pDestDdy = m_TriangleInfo.ShaderOutputsDdy;
 	for( uint32 iReg = 0; iReg < c_iPixelShaderRegisters; ++iReg, ++pDestDdx, ++pDestDdy )
 	{
@@ -2123,11 +2126,14 @@ void CMuli3DDevice::SetVSOutputFromGradient( m3dvsoutput *o_pVSOutput, float32 i
 	// 计算o_pVSOutput->vPosition.z和w
 	o_pVSOutput->vPosition.z = m_TriangleInfo.pBaseVertex->vPosition.z +
 		m_TriangleInfo.fZDdx * fOffsetX + m_TriangleInfo.fZDdy * fOffsetY;
+
+	// 前面设置过io_pVSOutput->vPosition.w = fInvW;所以，这里的w并不是1，而是1/w
 	o_pVSOutput->vPosition.w = m_TriangleInfo.pBaseVertex->vPosition.w +
 		m_TriangleInfo.fWDdx * fOffsetX + m_TriangleInfo.fWDdy * fOffsetY;
 
 	shaderreg *pDest = o_pVSOutput->ShaderOutputs;
 	const shaderreg *pBase = m_TriangleInfo.pBaseVertex->ShaderOutputs;
+	// 这些ShaderOutputsDdx，ShaderOutputsDdy 在CalculateTriangleGradients 计算的偏导数
 	const shaderreg *pDdx = m_TriangleInfo.ShaderOutputsDdx;
 	const shaderreg *pDdy = m_TriangleInfo.ShaderOutputsDdy;
 	for( uint32 iReg = 0; iReg < c_iPixelShaderRegisters; ++iReg, ++pDest, ++pBase, ++pDdx, ++pDdy )
@@ -2156,6 +2162,7 @@ void CMuli3DDevice::SetVSOutputFromGradient( m3dvsoutput *o_pVSOutput, float32 i
 
 inline void CMuli3DDevice::StepXVSOutputFromGradient( m3dvsoutput *io_pVSOutput )
 {
+	// 利用偏导数来计算vPosition.z，w和ShaderOutputs
 	io_pVSOutput->vPosition.z += m_TriangleInfo.fZDdx;
 	io_pVSOutput->vPosition.w += m_TriangleInfo.fWDdx;
 
@@ -2182,6 +2189,7 @@ inline void CMuli3DDevice::StepXVSOutputFromGradient( m3dvsoutput *io_pVSOutput 
 
 void CMuli3DDevice::RasterizeTriangle( const m3dvsoutput *i_pVSOutput0, const m3dvsoutput *i_pVSOutput1, const m3dvsoutput *i_pVSOutput2 )
 {
+	// Calculates gradients(或者可以理解为偏导数) for shader registers.
 	CalculateTriangleGradients( i_pVSOutput0, i_pVSOutput1, i_pVSOutput2 );
 
 	// If in wireframe mode draw triangle edges as lines.
@@ -2263,12 +2271,14 @@ void CMuli3DDevice::RasterizeTriangle( const m3dvsoutput *i_pVSOutput0, const m3
 			break;
 		}
 
+		// fX[0], fX[1] 就是扫描线左边和右边的x的坐标
 		for( ; iY[0] < iY[1]; ++iY[0], fX[0] += fDeltaX[0], fX[1] += fDeltaX[1] )
 		{
 			const int32 iX[2] = { ftol( ceilf( fX[0] ) ), ftol( ceilf( fX[1] ) ) };
 			// const float32 fPreStepX = (float32)iX[0] - fX[0];
-
 			m3dvsoutput VSOutput;
+			// 插值计算扫描线最左边的点的信息(iX[0], iY[0]) 到VSOutput中
+			//Sets shader registers from triangle gradients.
 			SetVSOutputFromGradient( &VSOutput, (float32)iX[0], (float32)iY[0] );
 			m_TriangleInfo.iCurPixelY = iY[0];
 			(*this.*m_RenderInfo.fpRasterizeScanline)( iY[0], iX[0], iX[1], &VSOutput );
@@ -2283,8 +2293,11 @@ void CMuli3DDevice::RasterizeScanline_ColorOnly( uint32 i_iY, uint32 i_iX, uint3
 	//float32 *pFrameData = m_RenderInfo.pFrameData ? &m_RenderInfo.pFrameData[i_iY * m_RenderInfo.iColorBufferPitch + i_iX * m_RenderInfo.iColorFloats ] : 0;
 	//float32 *pDepthData = m_RenderInfo.pDepthData ? &m_RenderInfo.pDepthData[i_iY * m_RenderInfo.iDepthBufferPitch + i_iX ] : 0;
 
+	// 循环扫描线
 	for( ; i_iX < i_iX2; ++i_iX,
 		pFrameData += m_RenderInfo.iColorFloats, ++pDepthData,
+		// Updates shader registers from triangle gradients performing a step to 
+		// the next pixel in the current scanline.
 		StepXVSOutputFromGradient( io_pVSOutput ) )
 	{
 		// Get depth of current pixel
@@ -2310,7 +2323,12 @@ void CMuli3DDevice::RasterizeScanline_ColorOnly( uint32 i_iY, uint32 i_iX, uint3
 		if( m_RenderInfo.bColorWrite )
 		{
 			m3dvsoutput PSInput;
+			// 因为io_pVSOutput->vPosition 再传入来之前就保存了 1/w, (执行io_pVSOutput->vPosition.w = fInvW;)
+			// 现在这里在进行乘上 w，主要目的就是求正确的插值。
+			// 因为 最终投影点x、y和s/z、t/z是线性关系，所以，这里就是
+			// 对s/z、t/z关于x’、y’进行插值得到s’/z’、t’/z’，然后用s’/z’和t’/z’分别除以1/z’，就得到了插值s’和t’
 			m_TriangleInfo.fCurPixelInvW = 1.0f / io_pVSOutput->vPosition.w;
+			// 这里其实相当于乘上w
 			MultiplyVertexShaderOutputRegisters( &PSInput, io_pVSOutput, m_TriangleInfo.fCurPixelInvW );
 			// note: PSInput now only contains valid register data, position etc. are not initialized!
 
@@ -2326,6 +2344,7 @@ void CMuli3DDevice::RasterizeScanline_ColorOnly( uint32 i_iY, uint32 i_iX, uint3
 
 			// Execute the pixel shader
 			m_TriangleInfo.iCurPixelX = i_iX;
+			// PS 计算Color 保存到 vPixelColor中
 			m_pPixelShader->bExecute( PSInput.ShaderOutputs, vPixelColor, fDepth );
 
 			// Write the new color to the colorbuffer
