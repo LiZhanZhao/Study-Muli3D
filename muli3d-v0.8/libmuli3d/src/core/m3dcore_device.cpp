@@ -1667,7 +1667,7 @@ inline void CMuli3DDevice::ProjectVertex( m3dvsoutput *io_pVSOutput )
 
 	// divide shader output registers by w; this way we can interpolate them linearly while rasterizing ...
 	io_pVSOutput->vPosition.w = fInvW;
-	// VertexShaderOutput 除以 w
+	// VertexShaderOutput 乘以 w
 	MultiplyVertexShaderOutputRegisters( io_pVSOutput, io_pVSOutput, io_pVSOutput->vPosition.w );
 }
 
@@ -2025,7 +2025,7 @@ void CMuli3DDevice::DrawTriangle( const m3dvsoutput *i_pVSOutput0, const m3dvsou
 	if( bCullTriangle( ppSrc[0], ppSrc[1], ppSrc[2] ) )
 		return;
 
-	// Project the remaining vertices
+	// Project the remaining vertices (投影剩下的，正常情况下，这里是不会执行的)
 	for( iVertex = 3; iVertex < iNumVertices; ++iVertex )
 		ProjectVertex( ppSrc[iVertex] );
 
@@ -2043,6 +2043,7 @@ void CMuli3DDevice::DrawTriangle( const m3dvsoutput *i_pVSOutput0, const m3dvsou
 		ppSrc = m_pClipVertices[iStage];
 	}
 
+	// ppSrc 已经经过裁剪，透视变换
 	for( iVertex = 1; iVertex < iNumVertices - 1; ++iVertex )
 		RasterizeTriangle( ppSrc[0], ppSrc[iVertex], ppSrc[iVertex + 1] );
 }
@@ -2056,18 +2057,23 @@ void CMuli3DDevice::CalculateTriangleGradients( const m3dvsoutput *i_pVSOutput0,
 	const float32 fDeltaY[2] = { i_pVSOutput1->vPosition.y - i_pVSOutput0->vPosition.y, i_pVSOutput2->vPosition.y - i_pVSOutput0->vPosition.y };
 	// value = 1.0f / (v1.x - v0.x) * (v2.y - v0.y) - (v2.x - v0.x) * (v1.y - v0.y)
 	m_TriangleInfo.fCommonGradient = 1.0f / ( fDeltaX[0] * fDeltaY[1] - fDeltaX[1] * fDeltaY[0] );
+	// 设置pBaseVertex
 	m_TriangleInfo.pBaseVertex = i_pVSOutput0;
 
 	// The derivatives with respect to the y-coordinate are negated, because in screen-space the y-axis is reversed.
+	// dz/dx, 和 dz/dy
 	// v1.z - v0.z , v2.z - v0.z
 	const float32 fDeltaZ[2] = { i_pVSOutput1->vPosition.z - i_pVSOutput0->vPosition.z, i_pVSOutput2->vPosition.z - i_pVSOutput0->vPosition.z };
-	// 
+	// ((v1.z - v0.z) * (v2.y - v0.y) - (v2.z - v0.z) * (v1.y - v0.y)) / (v1.x - v0.x) * (v2.y - v0.y) - (v2.x - v0.x) * (v1.y - v0.y)
 	m_TriangleInfo.fZDdx = ( fDeltaZ[0] * fDeltaY[1] - fDeltaZ[1] * fDeltaY[0] ) * m_TriangleInfo.fCommonGradient;
+	// -((v1.z - v0.z) * (v2.x - v0.x) - (v2.z - v0.z) * (v1.x - v0.x)) / (v1.x - v0.x) * (v2.y - v0.y) - (v2.x - v0.x) * (v1.y - v0.y)
 	m_TriangleInfo.fZDdy = -( fDeltaZ[0] * fDeltaX[1] - fDeltaZ[1] * fDeltaX[0] ) * m_TriangleInfo.fCommonGradient;
 
+	// dw/dx, 和 dw/dy
 	const float32 fDeltaW[2] = { i_pVSOutput1->vPosition.w - i_pVSOutput0->vPosition.w, i_pVSOutput2->vPosition.w - i_pVSOutput0->vPosition.w };
 	m_TriangleInfo.fWDdx = ( fDeltaW[0] * fDeltaY[1] - fDeltaW[1] * fDeltaY[0] ) * m_TriangleInfo.fCommonGradient;
 	m_TriangleInfo.fWDdy = -( fDeltaW[0] * fDeltaX[1] - fDeltaW[1] * fDeltaX[0] ) * m_TriangleInfo.fCommonGradient;
+
 
 	shaderreg *pDestDdx = m_TriangleInfo.ShaderOutputsDdx;
 	shaderreg *pDestDdy = m_TriangleInfo.ShaderOutputsDdy;
@@ -2114,7 +2120,7 @@ void CMuli3DDevice::SetVSOutputFromGradient( m3dvsoutput *o_pVSOutput, float32 i
 {
 	const float32 fOffsetX = ( i_fX - m_TriangleInfo.pBaseVertex->vPosition.x );
 	const float32 fOffsetY = ( i_fY - m_TriangleInfo.pBaseVertex->vPosition.y );
-
+	// 计算o_pVSOutput->vPosition.z和w
 	o_pVSOutput->vPosition.z = m_TriangleInfo.pBaseVertex->vPosition.z +
 		m_TriangleInfo.fZDdx * fOffsetX + m_TriangleInfo.fZDdy * fOffsetY;
 	o_pVSOutput->vPosition.w = m_TriangleInfo.pBaseVertex->vPosition.w +
