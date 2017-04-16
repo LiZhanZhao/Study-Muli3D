@@ -2075,6 +2075,7 @@ void CMuli3DDevice::CalculateTriangleGradients( const m3dvsoutput *i_pVSOutput0,
 	{
 		switch( m_RenderInfo.VSOutputs[iReg] )
 		{
+		// 注意这里是没有break
 		case m3dsrt_vector4:
 			{
 				const float32 fDeltaRegVal[2] = { i_pVSOutput1->ShaderOutputs[iReg].w - i_pVSOutput0->ShaderOutputs[iReg].w,
@@ -2120,6 +2121,7 @@ void CMuli3DDevice::SetVSOutputFromGradient( m3dvsoutput *o_pVSOutput, float32 i
 	o_pVSOutput->vPosition.w = m_TriangleInfo.pBaseVertex->vPosition.w +
 		m_TriangleInfo.fWDdx * fOffsetX + m_TriangleInfo.fWDdy * fOffsetY;
 
+	// ShaderOutput vs 输出的属性
 	shaderreg *pDest = o_pVSOutput->ShaderOutputs;
 	const shaderreg *pBase = m_TriangleInfo.pBaseVertex->ShaderOutputs;
 	const shaderreg *pDdx = m_TriangleInfo.ShaderOutputsDdx;
@@ -2176,6 +2178,7 @@ inline void CMuli3DDevice::StepXVSOutputFromGradient( m3dvsoutput *io_pVSOutput 
 
 void CMuli3DDevice::RasterizeTriangle( const m3dvsoutput *i_pVSOutput0, const m3dvsoutput *i_pVSOutput1, const m3dvsoutput *i_pVSOutput2 )
 {
+	// 主要是填充m_TriangleInfo的属性
 	CalculateTriangleGradients( i_pVSOutput0, i_pVSOutput1, i_pVSOutput2 );
 
 	// If in wireframe mode draw triangle edges as lines.
@@ -2187,6 +2190,7 @@ void CMuli3DDevice::RasterizeTriangle( const m3dvsoutput *i_pVSOutput0, const m3
 		return;
 	}
 
+	// pVertices [0] 保存的是y最小的顶点
 	// Sort vertices by y-coordinate ------------------------------------------
 	const m3dvsoutput *pVertices[3] = { i_pVSOutput0, i_pVSOutput1, i_pVSOutput2 };
 	if( i_pVSOutput1->vPosition.y < pVertices[0]->vPosition.y ) { pVertices[1] = pVertices[0]; pVertices[0] = i_pVSOutput1; }
@@ -2198,7 +2202,9 @@ void CMuli3DDevice::RasterizeTriangle( const m3dvsoutput *i_pVSOutput0, const m3
 	const vector4 &vB = pVertices[1]->vPosition;
 	const vector4 &vC = pVertices[2]->vPosition;
 
-	// Calculate slopes(倾斜) for stepping ------------------------------------------
+	// 计算两点之间的斜率,
+	// [0] = A->B [1] = A->C [2] = B->C
+	// Calculate slopes for stepping ------------------------------------------
 	const float32 fStepX[3] = {
 		( vB.y - vA.y > 0.0f ) ? ( vB.x - vA.x ) / ( vB.y - vA.y ) : 0.0f,
 		( vC.y - vA.y > 0.0f ) ? ( vC.x - vA.x ) / ( vC.y - vA.y ) : 0.0f,
@@ -2215,9 +2221,11 @@ void CMuli3DDevice::RasterizeTriangle( const m3dvsoutput *i_pVSOutput0, const m3
 		{
 		case 0: // Draw upper triangle-part
 			{
+				// ftol (float32 -> int32)
 				iY[0] = ftol( ceilf( vA.y ) );
 				iY[1] = ftol( ceilf( vB.y ) );
 
+				// 比较A->B,A->C 的斜率，fDeltaX[0]保存的是比较小的斜率
 				if( fStepX[0] > fStepX[1] ) // left <-> right ?
 				{
 					fDeltaX[0] = fStepX[1];
@@ -2241,6 +2249,7 @@ void CMuli3DDevice::RasterizeTriangle( const m3dvsoutput *i_pVSOutput0, const m3
 				iY[1] = ftol( ceilf( vC.y ) );
 
 				const float32 fPreStepY = (float32)iY[0] - vB.y;
+				// 比较A->C ,B->C 的斜率，fDeltaX[0]保存的是比较小的斜率
 				if( fStepX[1] > fStepX[2] ) // left <-> right ?
 				{
 					fDeltaX[0] = fStepX[1];
@@ -2256,13 +2265,16 @@ void CMuli3DDevice::RasterizeTriangle( const m3dvsoutput *i_pVSOutput0, const m3
 			}
 			break;
 		}
-
+		
+		// 每一次循环就是一条扫描线
 		for( ; iY[0] < iY[1]; ++iY[0], fX[0] += fDeltaX[0], fX[1] += fDeltaX[1] )
 		{
+			// 扫描线x轴的两个端点
 			const int32 iX[2] = { ftol( ceilf( fX[0] ) ), ftol( ceilf( fX[1] ) ) };
 			// const float32 fPreStepX = (float32)iX[0] - fX[0];
 
 			m3dvsoutput VSOutput;
+			// (float32)iX[0], (float32)iY[0]就是扫描线的开始的端点x,y坐标
 			SetVSOutputFromGradient( &VSOutput, (float32)iX[0], (float32)iY[0] );
 			m_TriangleInfo.iCurPixelY = iY[0];
 			(*this.*m_RenderInfo.fpRasterizeScanline)( iY[0], iX[0], iX[1], &VSOutput );
