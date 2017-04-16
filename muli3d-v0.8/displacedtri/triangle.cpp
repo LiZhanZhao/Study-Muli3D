@@ -42,7 +42,7 @@ public:
 		vVector3TransformNormal( vTangent, vTangent, matGetMatrix( m3dsc_worldmatrix ) );
 		vector3 vBinormal; vVector3Cross( vBinormal, vNormal, vTangent );
 
-		// WorldToTangentSpace 世界坐标系 -> 切线空间 (转置)
+		// WorldToTangentSpace 世界坐标系 -> 切线空间 (经过转置(逆))
 		const matrix44 matWorldToTangentSpace(
 			vTangent.x, vBinormal.x, vNormal.x, 0.0f,
 			vTangent.y, vBinormal.y, vNormal.y, 0.0f,
@@ -91,14 +91,18 @@ public:
 	bool bExecute( const shaderreg *i_pInput, vector4 &io_vColor, float32 &io_fDepth )
 	{
 		// read normal from normalmap
-		vector4 vTexNormal; SampleTexture( vTexNormal, 1, i_pInput[0].x, i_pInput[0].y, 0.0f );
+		// i_pInput[0] 是 uv，现在就是采样normal texture，vTexNormal保存texture的颜色值
+		vector4 vTexNormal; 
+		SampleTexture( vTexNormal, 1, i_pInput[0].x, i_pInput[0].y, 0.0f );
 		const vector3 vNormal( vTexNormal.x * 2.0f - 1.0f, vTexNormal.y * 2.0f - 1.0f, vTexNormal.z * 2.0f - 1.0f );
 
 		// sample texture
+		// i_pInput[0] 是 uv，现在就是采样main texture，vTex保存texture的颜色值
 		vector4 vTex;
 		SampleTexture( vTex, 0, i_pInput[0].x, i_pInput[0].y, 0.0f );
 		
 		// renormalize interpolated light direction vector
+		// i_pInput[1] = vLightDirTangentSpace(切线空间的光的方向)
 		vector3 vLightDir = i_pInput[1]; vLightDir.normalize();
 
 		// compute diffuse light
@@ -277,6 +281,6 @@ void CTriangle::Render( uint32 i_iPass )
 		pGraphics->SetTextureSamplerState( i, m3dtss_addressu, m3dta_clamp );
 		pGraphics->SetTextureSamplerState( i, m3dtss_addressv, m3dta_clamp );
 	}
-
+	
 	pGraphics->pGetM3DDevice()->DrawPrimitive( m3dpt_trianglelist, 0, 1 );
 }
