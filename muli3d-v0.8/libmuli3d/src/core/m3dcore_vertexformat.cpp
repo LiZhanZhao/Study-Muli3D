@@ -40,13 +40,14 @@ result CMuli3DVertexFormat::Create( const m3dvertexelement *i_pVertexDeclaration
 		FUNC_FAILING( "CMuli3DVertexFormat::Create: parameter i_iVertexDeclSize is 0.\n" );
 		return e_invalidparameters;
 	}
-	// i_pVertexDeclaration array length
+	// i_pVertexDeclaration array length,有多少个元素
 	m_iNumVertexElements = i_iVertexDeclSize / sizeof( m3dvertexelement );
 	m_iHighestStream = 0;
 
 	const m3dvertexelement *pCurElement = i_pVertexDeclaration;
 	for( uint32 iElement = 0; iElement < m_iNumVertexElements; ++iElement, ++pCurElement )
 	{
+		// 验证数据是否合格
 		if( pCurElement->iStream >= c_iMaxVertexStreams )
 		{
 			FUNC_FAILING( "CMuli3DVertexFormat::Create: vertex element's stream number exceeds number of available streams.\n" );
@@ -65,6 +66,7 @@ result CMuli3DVertexFormat::Create( const m3dvertexelement *i_pVertexDeclaration
 			return e_invalidparameters;
 		}
 
+		// 计算m_iHighestStream
 		if( pCurElement->iStream > m_iHighestStream )
 			m_iHighestStream = pCurElement->iStream;
 	}
@@ -75,7 +77,7 @@ result CMuli3DVertexFormat::Create( const m3dvertexelement *i_pVertexDeclaration
 		FUNC_FAILING( "CMuli3DVertexFormat::Create: out of memory, cannot create vertex element data.\n" );
 		return e_outofmemory;
 	}
-	// 把外部的 i_pVertexDeclaration 参数 拷贝到 m_pElements
+	// 把外部的 i_pVertexDeclaration 参数 拷贝到 m_pElements， 复制数据
 	memcpy( m_pElements, i_pVertexDeclaration, sizeof( m3dvertexelement ) * m_iNumVertexElements );
 
 	return s_ok;
