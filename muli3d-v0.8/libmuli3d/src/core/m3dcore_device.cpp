@@ -1057,6 +1057,7 @@ result CMuli3DDevice::PreRender()
 	// 填充 m_RenderInfo 属性
 
 	// Store output types in the internal render-info structure.
+	// 设置device.m_RenderInfo.VSOutputs, GetOutputRegisters是自定义的)
 	for( uint32 iReg = 0; iReg < c_iPixelShaderRegisters; ++iReg )
 		m_RenderInfo.VSOutputs[iReg] = m_pVertexShader->GetOutputRegisters( iReg );
 
@@ -1190,7 +1191,7 @@ void CMuli3DDevice::PostRender()
 result CMuli3DDevice::DecodeVertexStream( m3dvsinput &o_VertexShaderInput, uint32 i_iVertex )
 {
 	const byte *pVertex[c_iMaxVertexStreams];
-	// 获得vertex stream
+	// 获得vertex streams, 多个vertex streams 保存到对应的pVertex数组中
 	const vertexstream *pCurVertexStream = m_VertexStreams;
 	for( uint32 iStream = 0; iStream <= m_pVertexFormat->iGetHighestStream(); ++iStream, ++pCurVertexStream )
 	{
@@ -1210,11 +1211,15 @@ result CMuli3DDevice::DecodeVertexStream( m3dvsinput &o_VertexShaderInput, uint3
 
 	// Fill vertex-info structure, which can be passed to the vertex shader,
 	// with data from the vertex-streams, depending on the current vertexformat
+	
 	const m3dvertexelement *pCurVertexElement = m_pVertexFormat->pGetElements();
 	uint32 iElement = m_pVertexFormat->iGetNumVertexElements();
+	// 注意，这里虽然是iElement--，
+	// 最后是++pCurVertexElement,从前往后遍历
 	while( iElement-- )
 	{
 		shaderreg &Register = o_VertexShaderInput.ShaderInputs[pCurVertexElement->iRegister];
+		// 先获得对应的vertex stream 数据
 		const float32 *pData = (float32 *)pVertex[pCurVertexElement->iStream];
 		switch( pCurVertexElement->Type )
 		{
@@ -1281,12 +1286,12 @@ result CMuli3DDevice::FetchVertex( m3dvertexcacheentry **io_ppVertex, uint32 i_i
 	// Update the destination cache entry and return it -----------------------
 	pDestEntry->iVertexIndex = i_iVertex;
 	pDestEntry->iFetchTime = m_iFetchedVertices++;
-	// 填充 pDestEntry->VertexOutput.SourceInput.ShaderInputs
+	// 利用m_VertexStreams 填充 pDestEntry->VertexOutput.SourceInput.ShaderInputs
+	// pDestEntry->VertexOutput.SourceInput.ShaderInputs 就是没有经过任何变换的顶点
 	result resDecode = DecodeVertexStream( pDestEntry->VertexOutput.SourceInput, i_iVertex );
 	if( FUNC_FAILED( resDecode ) )
 		return resDecode;
 
-	// pDestEntry->VertexOutput.SourceInput.ShaderInputs 就是没有经过任何变换的顶点
 	// pDestEntry->VertexOutput.ShaderOutputs 理解为vs 输出的 顶点属性
 	m_pVertexShader->Execute( pDestEntry->VertexOutput.SourceInput.ShaderInputs,
 		pDestEntry->VertexOutput.vPosition, pDestEntry->VertexOutput.ShaderOutputs );
@@ -1327,7 +1332,8 @@ result CMuli3DDevice::DrawPrimitive( m3dprimitivetype i_PrimitiveType, uint32 i_
 	case m3dpt_trianglelist: iNumVertices = i_iPrimitiveCount * 3; break;
 	default: FUNC_FAILING( "CMuli3DDevice::DrawPrimitive: invalid primitive type specified.\n" ); return e_invalidparameters;
 	}
-	// 验证是否可以开始渲染
+	// 验证是否可以开始渲染，
+	// 会设置 m_RenderInfo.VSOutputs 和 m_RenderInfo.xxx其他相关属性
 	result resCheck = PreRender();
 	if( FUNC_FAILED( resCheck ) )
 		return resCheck;
@@ -1343,9 +1349,9 @@ result CMuli3DDevice::DrawPrimitive( m3dprimitivetype i_PrimitiveType, uint32 i_
 		// 遍历3个顶点
 		for( uint32 iVertex = 0; iVertex < 3; ++iVertex )
 		{
-			// 提取vertex
 			/// Fetches a vertex from the current vertex streams and transforms it by calling the vertex shader.
-			// 提取一个vertex
+			// 从当前的vertex streams 提取一个vertex ,这个vertex是经过vs的执行的
+			// 填充 m3dvertexcacheentry 结构
 			result resFetch = FetchVertex( &pVertices[iVertex], iVertexIndices[iVertex] );
 			if( FUNC_FAILED( resFetch ) )
 			{

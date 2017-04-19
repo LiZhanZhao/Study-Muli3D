@@ -255,12 +255,17 @@ void CTriangle::Render( uint32 i_iPass )
 	// 为fs Shader 设置 vector (light color)
 	m_pPixelShader->SetVector( 0, pLight->vGetColor() );
 
-	// Stack.top() 的 StateBlock 设置VertexFormat （设置device.m_RenderInfo.VSInputs）
+	// Stack.top() 的 StateBlock 设置VertexFormat 
+	// (利用m_pVertexFormat 设置device.m_RenderInfo.VSInputs)
 	pGraphics->SetVertexFormat( m_pVertexFormat );
+
 	// Stack.top() 的 StateBlock设置vertex stream
+	// (设置device的m_VertexStreams)
 	pGraphics->SetVertexStream( 0, m_pVertexBuffer, 0, sizeof( vertexformat ) );
+
 	// Stack.top() 的 StateBlock设置 vertexShader,(device 设置 vertexShader )
 	pGraphics->SetVertexShader( m_pVertexShader );
+
 	// Stack.top() 的 StateBlock设置 PixelShader,(device 设置 PixelShader )
 	pGraphics->SetPixelShader( m_pPixelShader );
 
