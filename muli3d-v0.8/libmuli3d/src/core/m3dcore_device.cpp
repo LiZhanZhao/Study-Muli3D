@@ -1582,6 +1582,7 @@ void CMuli3DDevice::InterpolateVertexShaderOutput( m3dvsoutput *o_pVSOutput, con
 	const shaderreg *pB = i_pVSOutputB->ShaderOutputs;
 	for( uint32 iReg = 0; iReg < c_iPixelShaderRegisters; ++iReg, ++pO, ++pA, ++pB )
 	{
+		// m_RenderInfo.VSOutputs 这个在 PreRender 进行初始化
 		switch( m_RenderInfo.VSOutputs[iReg] )
 		{
 		case m3dsrt_vector4:
@@ -1911,6 +1912,12 @@ inline bool CMuli3DDevice::bCullTriangle( const m3dvsoutput *i_pVSOutput0, const
 
 uint32 CMuli3DDevice::iClipToPlane( uint32 i_iNumVertices, uint32 i_iSrcIndex, const plane &i_plane, bool i_bHomogenous )
 {
+	// 因为 m_pClipVertices[2][20]; 主要是在m_pClipVertices[0]，m_pClipVertices[1]两个之间进行切换,修改顶点数据 
+	// m_pClipVertices[0|1][3~19] 存储的，只是插值完的临时的顶点数据.
+	// 真正裁剪完的数据时存储在m_pClipVertices[(i_iSrcIndex + 1) & 1][0,1,2] 中
+
+
+
 	// m_pClipVertices[i_iSrcIndex] 获得 顶点数组，存储了3个顶点
 	m3dvsoutput **ppSrcVertices = m_pClipVertices[i_iSrcIndex];
 	// (i_iSrcIndex + 1) & 1 就是限定范围是[0,1],m_pClipVertices的index不能超过1
@@ -1945,7 +1952,8 @@ uint32 CMuli3DDevice::iClipToPlane( uint32 i_iNumVertices, uint32 i_iSrcIndex, c
 				// m_iNextFreeClipVertex 开始 = 3，就是使用index = 3 以后的数据，理解为临时存放 插完值的数据
 				InterpolateVertexShaderOutput( &m_ClipVertices[m_iNextFreeClipVertex], ppSrcVertices[i], ppSrcVertices[j], di / (di - dj) );
 
-				// 保存 裁剪完的m3dvsoutput
+				// 保存 裁剪完的m3dvsoutput，这里就进行了修改数据，
+				// 把m_pClipVertices的[0,1,2]的数据都修改了，
 				ppDestVertices[iNumClippedVertices++] = &m_ClipVertices[m_iNextFreeClipVertex];
 
 				m_iNextFreeClipVertex = ( m_iNextFreeClipVertex + 1 ) % 20; // TODO: 20 enough?
@@ -2026,6 +2034,7 @@ void CMuli3DDevice::DrawTriangle( const m3dvsoutput *i_pVSOutput0, const m3dvsou
 	uint32 iVertex;
 
 	// Project the first three vertices for culling
+	// m_pClipVertices[iStage] [0,1,2] 前3个顶点保存的就是经过 iClipToPlane之后的顶点
 	m3dvsoutput **ppSrc = m_pClipVertices[iStage];
 	for( iVertex = 0; iVertex < 3; ++iVertex )
 		ProjectVertex( ppSrc[iVertex] );
