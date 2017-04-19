@@ -6,6 +6,7 @@
 #include "../../libmuli3d/include/m3d.h"
 #include <map>
 
+// 个人理解StateBlock的作用，简单得说，避免device多次设置相同state
 class CStateBlock
 {
 protected:

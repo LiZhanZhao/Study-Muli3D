@@ -27,11 +27,15 @@ result CStateBlock::SetRenderState( m3drenderstate i_RenderState, uint32 i_iValu
 	CMuli3DDevice *pM3DDevice = m_pParent->pGetM3DDevice();
 
 	// Record state if not yet saved ------------------------------------------
+	// 在 StateBlock 找不到 i_RenderState 的情况下
 	if( m_RenderStates.find( i_RenderState ) == m_RenderStates.end() )
 	{
 		uint32 iCurrentValue;
+		// 在 pM3DDevice 中 找到 i_RenderState 的情况下
 		if( !FUNC_FAILED( pM3DDevice->GetRenderState( i_RenderState, iCurrentValue ) ) )
 		{
+			// 如果pM3DDevice的renderState的value与参数i_iValue的一致的情况下，直接返回
+			// 否则, 在 StateBlock 记录 对应的renderState 并且 pM3DDevice 也设置renderState
 			if( iCurrentValue == i_iValue )
 				return s_ok;
 			m_RenderStates[i_RenderState] = iCurrentValue;
@@ -255,7 +259,8 @@ void CStateBlock::SetRenderTarget( CMuli3DRenderTarget *i_pRenderTarget )
 	if( !m_bChangedRenderTarget )
 	{
 		m_pRenderTarget = pM3DDevice->pGetRenderTarget();
-		// 如果同时有两个RenderTexture的话，就需要计数器减少1
+		// 如果pM3DDevice 的 renderTarget 和 参数的 renderTarget一致的话，
+		// pM3DDevice就不用设置renderTarget
 		if( i_pRenderTarget == m_pRenderTarget )
 		{
 			SAFE_RELEASE( m_pRenderTarget );
