@@ -26,7 +26,7 @@
 #include "../m3dbase.h"
 #include "../m3dtypes.h"
 
-/// Vertex buffers are memory buffers that contain vertex-data, which is described by a vertex format.
+/// Vertex buffers are memory buffers that contain vertex-data, which is described by a vertex format. 
 class CMuli3DVertexBuffer : public IBase
 {
 protected:

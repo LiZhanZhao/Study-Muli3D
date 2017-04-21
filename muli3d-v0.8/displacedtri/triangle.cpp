@@ -130,6 +130,7 @@ public:
 
 m3dvertexelement VertexDeclaration[] =
 {
+	// ( i_iStream, i_Type, i_Register ) 
 	M3DVERTEXFORMATDECL( 0, m3dvet_vector3, 0 ),
 	M3DVERTEXFORMATDECL( 0, m3dvet_vector3, 1 ),
 	M3DVERTEXFORMATDECL( 0, m3dvet_vector3, 2 ),
@@ -166,10 +167,12 @@ bool CTriangle::bInitialize( const vertexformat *i_pVertices, string i_sTexture,
 	CMuli3DDevice *pM3DDevice = pGraphics->pGetM3DDevice();
 
 	// create VertexFormat, VertexDeclaration 顶点属性声明(vertex怎么读入Shader相关)
+	// 简单地理解, 复制VertexDeclaration 数据 到 m_pVertexFormat对应的属性中
 	if( FUNC_FAILED( pM3DDevice->CreateVertexFormat( &m_pVertexFormat, VertexDeclaration, sizeof( VertexDeclaration ) ) ) )
 		return false;
 
-	// create VertexBuffer, 存储all Vertex 需要大多的内存(vertex的位置，UV，法线，切线)
+	// create VertexBuffer, 存储all Vertex 需要多大的内存(vertex的位置，UV，法线，切线)
+	// 简单地理解，m_pVertexBuffer保存byte[] 是存储vertexformat数据
 	if( FUNC_FAILED( pM3DDevice->CreateVertexBuffer( &m_pVertexBuffer, sizeof( vertexformat ) * 3 ) ) )
 		return false;
 
@@ -252,12 +255,17 @@ void CTriangle::Render( uint32 i_iPass )
 	// 为fs Shader 设置 vector (light color)
 	m_pPixelShader->SetVector( 0, pLight->vGetColor() );
 
-	// Stack.top() 的 StateBlock 设置VertexFormat （设置device.m_RenderInfo.VSInputs）
+	// Stack.top() 的 StateBlock 设置VertexFormat 
+	// (利用m_pVertexFormat 设置device.m_RenderInfo.VSInputs)
 	pGraphics->SetVertexFormat( m_pVertexFormat );
+
 	// Stack.top() 的 StateBlock设置vertex stream
+	// (设置device的m_VertexStreams)
 	pGraphics->SetVertexStream( 0, m_pVertexBuffer, 0, sizeof( vertexformat ) );
+
 	// Stack.top() 的 StateBlock设置 vertexShader,(device 设置 vertexShader )
 	pGraphics->SetVertexShader( m_pVertexShader );
+
 	// Stack.top() 的 StateBlock设置 PixelShader,(device 设置 PixelShader )
 	pGraphics->SetPixelShader( m_pPixelShader );
 
