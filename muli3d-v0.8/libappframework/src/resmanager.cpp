@@ -469,6 +469,7 @@ HRESOURCE CResManager::hLoadResource( string i_sFilename )
 	if( !newResource.pResource )
 		return 0;
 
+	// hResource这里理解为 保存了资源的GUID
 	newResource.hResource = ++m_iNumLoadedResources;
 	newResource.iReferences = 1;
 	newResource.sFilename = i_sFilename;

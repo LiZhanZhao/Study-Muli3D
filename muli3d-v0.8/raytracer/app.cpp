@@ -39,11 +39,14 @@ bool CApp::bCreateWorld()
 
 	// Register board-entity and create an instance ---------------------------
 	pGetScene()->RegisterEntityType( "raytracer", CRaytracer::pCreate );
+
+	// 调用 CRaytracer::pCreate 
 	m_hRaytracer = pGetScene()->hCreateEntity( "raytracer" );
 	if( !m_hRaytracer )
 		return false;
 
 	CRaytracer *pRaytracer = (CRaytracer *)pGetScene()->pGetEntity( m_hRaytracer );
+	// M3D_PI * 0.5f 相当于90度
 	if( !pRaytracer->bInitialize( M3D_PI * 0.5f ) )
 		return false;
 
@@ -55,9 +58,13 @@ bool CApp::bCreateWorld()
 	if( !m_hMoon )
 		return false;
 
+	//  m_hEarth, m_hMoon 是资源的GUID
+	// 填充 m_pSphereData texture data
 	pRaytracer->bAddSphere( vector3( 0, 0, 0 ), 0.25f, vector4( 0, 0, 1, 1 ), m_hEarth );
 	pRaytracer->bAddSphere( vector3( -0.05f, 0, -0.7f ), 0.05f, vector4( 1, 1, 1, 1 ), m_hMoon );
 	pRaytracer->bAddSphere( vector3( 0, 0.5f, -0.15f ), 0.075f, vector4( 1, 1, 0, 1 ) );
+
+	// 填充m_pLightData texture data
 	pRaytracer->bAddLight( vector3( 2, 0, 1 ), vector4( 1, 0.95f, 0.9f, 1 ) );
 	pRaytracer->bAddLight( vector3( 0, 0, -1 ), vector4( 1, 0.75f, 1, 1 ) );
 
