@@ -32,12 +32,14 @@ void IMuli3DPixelShader::SetInfo( const m3dshaderregtype *i_pVSOutputs, const st
 
 void IMuli3DPixelShader::GetDerivatives( uint32 i_iRegister, vector4 &o_vDdx, vector4 &o_vDdy ) const
 {
-	o_vDdx = vector4( 0, 0, 0, 0 ); o_vDdy = vector4( 0, 0, 0, 0 );
+	o_vDdx = vector4( 0, 0, 0, 0 ); 
+	o_vDdy = vector4( 0, 0, 0, 0 );
 	if( i_iRegister < 0 || i_iRegister >= c_iPixelShaderRegisters )
 		return;
 
 	const shaderreg &A = m_pTriangleInfo->ShaderOutputsDdx[i_iRegister];
 	const shaderreg &B = m_pTriangleInfo->ShaderOutputsDdy[i_iRegister];
+	// ShaderOutputs : Vertex shader output registers
 	const shaderreg &C = m_pTriangleInfo->pBaseVertex->ShaderOutputs[i_iRegister];
 
 	const float32 D = m_pTriangleInfo->fWDdx;

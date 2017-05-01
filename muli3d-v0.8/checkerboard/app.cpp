@@ -39,11 +39,15 @@ bool CApp::bCreateWorld()
 
 	// Register board-entity and create an instance ---------------------------
 	pGetScene()->RegisterEntityType( "board", CBoard::pCreate );
+
+	// 调用 CBoard::pCreate  创建 CBoard 实例
 	m_hBoard = pGetScene()->hCreateEntity( "board" );
 	if( !m_hBoard )
 		return false;
 
+	
 	CBoard *pBoard = (CBoard *)pGetScene()->pGetEntity( m_hBoard );
+	// 调用 CBoard::bInitialize()
 	if( !pBoard->bInitialize() )
 		return false;
 
