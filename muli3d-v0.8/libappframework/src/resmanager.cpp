@@ -193,7 +193,7 @@ void *pLoadTexture( CResManager *i_pParent, string i_sFilename )
 
 	return new CTexture( g_pResManager, pTexture );
 }
-
+// 加载CubeTexture,CubeTexture里面就记录了6张图的路径Str
 void *pLoadCubeTexture( CResManager *i_pParent, string i_sFilename )
 {
 	CGraphics *pGraphics = i_pParent->pGetParent()->pGetGraphics();
@@ -209,11 +209,14 @@ void *pLoadCubeTexture( CResManager *i_pParent, string i_sFilename )
 	char *pCurPosition = (char *)pData;
 
 	// read in textures
+	// 找出所有的texture path ，保存到sFilenames中
 	while( true )
 	{
+		// 查找换行符
 		char *pEndOfLine = strchr( pCurPosition, '\n' );
+		// 查找到换行符的话，就把换行符替换为0
 		if( pEndOfLine ) *pEndOfLine = 0;
-
+		// 如果找不到任何字符了，就退出
 		if( !strlen( pCurPosition ) ) break;
 		string sTexture = pCurPosition;
 
@@ -231,9 +234,12 @@ void *pLoadCubeTexture( CResManager *i_pParent, string i_sFilename )
 	if( iNumTextures != 6 )
 		return 0;
 
+	// Texture Width
 	uint32 iEdgeLength = 0;
+	// Texture Format
 	m3dformat fmtCubeFormat = m3dfmt_r32g32b32f;
 
+	//CMuli3DTexture 数组
 	CMuli3DTexture **ppTextures = new CMuli3DTexture *[iNumTextures];
 	uint32 i;
 	for( i = 0; i < iNumTextures; ++i )
@@ -249,7 +255,7 @@ void *pLoadCubeTexture( CResManager *i_pParent, string i_sFilename )
 			SAFE_DELETE_ARRAY( ppTextures );
 			return 0;
 		}
-
+		// 加载PNG数据到CMuli3DTexture中
 		bool bResult = bLoadPNGTexture( &ppTextures[i], pTexData, pGraphics->pGetM3DDevice() );
 		SAFE_DELETE_ARRAY( pTexData );
 		if( !bResult )
@@ -263,7 +269,9 @@ void *pLoadCubeTexture( CResManager *i_pParent, string i_sFilename )
 
 		if( i == 0 )
 		{
+			// Texture Width
 			iEdgeLength = ppTextures[i]->iGetWidth();
+			// Texture Format
 			fmtCubeFormat = ppTextures[i]->fmtGetFormat();
 		}
 
@@ -281,6 +289,7 @@ void *pLoadCubeTexture( CResManager *i_pParent, string i_sFilename )
 	}
 
 	CMuli3DCubeTexture *pCubeTexture = 0;
+	// 创建 CMuli3DCubeTexture
 	if( FUNC_FAILED( pGraphics->pGetM3DDevice()->CreateCubeTexture( &pCubeTexture,
 		iEdgeLength, 0, fmtCubeFormat ) ) )
 	{
@@ -290,7 +299,7 @@ void *pLoadCubeTexture( CResManager *i_pParent, string i_sFilename )
 		SAFE_DELETE_ARRAY( ppTextures );
 		return 0;
 	}
-	
+	// 计算一张Texture的所有的Byte
 	uint32 iNumBytes = iEdgeLength * iEdgeLength;
 	switch( fmtCubeFormat )
 	{
@@ -301,6 +310,7 @@ void *pLoadCubeTexture( CResManager *i_pParent, string i_sFilename )
 	default: /* cannot happen */ break;
 	}
 
+	//  把 ppTextures 纹理数组 的数据 复制到 CMuli3DCubeTexture 中
 	for( uint32 iFace = m3dcf_positive_x; iFace <= m3dcf_negative_z; ++iFace )
 	{
 		uint8 *pDest = 0;
@@ -317,6 +327,7 @@ void *pLoadCubeTexture( CResManager *i_pParent, string i_sFilename )
 
 	SAFE_DELETE_ARRAY( ppTextures );
 
+	// 生成minmip
 	pCubeTexture->GenerateMipSubLevels( 0 );
 
 	return new CTexture( g_pResManager, pCubeTexture );

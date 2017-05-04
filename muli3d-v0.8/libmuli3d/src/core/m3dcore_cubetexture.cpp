@@ -43,6 +43,7 @@ result CMuli3DCubeTexture::Create( uint32 i_iEdgeLength, uint32 i_iMipLevels, m3
 	}
 
 	result resCreate;
+	// ´´½¨CMuli3DTexture
 	for( uint32 iFace = m3dcf_positive_x; iFace <= m3dcf_negative_z; ++iFace )
 	{
 		resCreate = m_pParent->CreateTexture( &m_ppCubeFaces[iFace], i_iEdgeLength, i_iEdgeLength, i_iMipLevels, i_fmtFormat );
