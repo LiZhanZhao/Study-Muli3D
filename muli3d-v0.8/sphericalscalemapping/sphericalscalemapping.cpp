@@ -40,11 +40,14 @@ bool CSphericalScaleMapping::bCreateWorld()
 
 	// Register triangle-entity and create an instance ------------------------
 	pGetScene()->RegisterEntityType( "sphere", CSphere::pCreate );
+	// 这里是调用CSphere::pCreate 方法
 	m_hSphere = pGetScene()->hCreateEntity( "sphere" );
 	if( !m_hSphere )
 		return false;
 
 	CSphere *pSphere = (CSphere *)pGetScene()->pGetEntity( m_hSphere );
+
+	// CSphere 的初始化, 初始化VertexBuffer 和 CubeTexture
 	if( !pSphere->bInitialize( 36, 36, "head.cube", "skull.cube" ) )
 		return false;
 

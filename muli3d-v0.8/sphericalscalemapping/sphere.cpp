@@ -329,6 +329,7 @@ bool CSphere::bInitialize( uint32 i_iStacks, uint32 i_iSlices, string i_sScaleMa
 	CGraphics *pGraphics = m_pParent->pGetParent()->pGetGraphics();
 	CMuli3DDevice *pM3DDevice = pGraphics->pGetM3DDevice();
 
+	// 创建 VertexFormat
 	if( FUNC_FAILED( pM3DDevice->CreateVertexFormat( &m_pVertexFormat, VertexDeclaration, sizeof( VertexDeclaration ) ) ) )
 		return false;
 
@@ -416,7 +417,7 @@ bool CSphere::bInitialize( uint32 i_iStacks, uint32 i_iSlices, string i_sScaleMa
 #else
 	const float32 a = sqrtf( 2.0f / ( 5.0f + sqrtf( 5.0f ) ) );
 	const float32 b = sqrtf( 2.0f / ( 5.0f - sqrtf( 5.0f ) ) );
-	
+	// 12个顶点数据
 	vertexformat Vertices[12];
 	Vertices[ 0].vPosition = vector3(   -a, 0.0f,    b );
 	Vertices[ 1].vPosition = vector3(    a, 0.0f,    b );
@@ -431,6 +432,7 @@ bool CSphere::bInitialize( uint32 i_iStacks, uint32 i_iSlices, string i_sScaleMa
 	Vertices[10].vPosition = vector3(    b,   -a, 0.0f );
 	Vertices[11].vPosition = vector3(   -b,   -a, 0.0f );
 
+	// 20个三角形
 	const uint16 iTriangles[20][3] =
 	{
 		{  1,  4,  0 }, {  4,  9,  0 }, {  4,  5,  9 }, {  8,  5,  4 },
@@ -443,21 +445,25 @@ bool CSphere::bInitialize( uint32 i_iStacks, uint32 i_iSlices, string i_sScaleMa
 	vertexformat *pDestVertices = 0;
 	for( uint32 i = 0; i < 20; ++i )
 	{
+		// 递归分解三角形，把分解完三角形的所有的顶点，保存到g_CurrentVertices中
 		Subdivide( Vertices[ iTriangles[i][0] ], Vertices[ iTriangles[i][1] ],
 			Vertices[ iTriangles[i][2] ], GEOSPHERE_SUBDIVISIONS );
 
 		if( !i )
 		{
+			// 分解一个三角形之后的顶点个数，和三角形个数
 			m_iNumVertices = 20 * g_CurrentVertices.size();
 			m_iNumPrimitives = m_iNumVertices / 3;
 
+			// 创建VertexBuffer ,m_pVertexBuffer 
 			if( FUNC_FAILED( pM3DDevice->CreateVertexBuffer( &m_pVertexBuffer, sizeof( vertexformat ) * m_iNumVertices ) ) )
 				return false;
-
+			// 获得m_pVertexBuffer 的数据指针pDestVertices
 			if( FUNC_FAILED( m_pVertexBuffer->GetPointer( 0, (void **)&pDestVertices ) ) )
 				return false;
 		}
-
+		// 把 g_CurrentVertices 里面的顶点 复制到 m_pVertexBuffer 中，这里主要就是把20个三角形分解，
+		// 分解完之后的顶点就保存到m_pVertexBuffer中
 		for( vector<vertexformat>::iterator pCurVertex = g_CurrentVertices.begin(); pCurVertex != g_CurrentVertices.end(); ++pCurVertex, ++pDestVertices )
 			memcpy( pDestVertices, &(*pCurVertex), sizeof( vertexformat ) );
 
@@ -475,6 +481,7 @@ bool CSphere::bInitialize( uint32 i_iStacks, uint32 i_iSlices, string i_sScaleMa
 
 	// Load environment texture ...
 	CResManager *pResManager = m_pParent->pGetParent()->pGetResManager();
+	// 加载CubeTexture
 	m_hEnvironment = pResManager->hLoadResource( "majestic.cube" );
 	if( !m_hEnvironment )
 		return false;
@@ -493,7 +500,9 @@ bool CSphere::bInitialize( uint32 i_iStacks, uint32 i_iSlices, string i_sScaleMa
 	if( !m_hScaleMapB )
 		return false;
 
+
 	// Create the cube --------------------------------------------------------
+	// 创建Cube
 	if( FUNC_FAILED( pM3DDevice->CreateVertexFormat( &m_pVertexFormatCube, VertexDeclaration, sizeof( VertexDeclarationCube ) ) ) )
 		return false;
 
@@ -510,6 +519,7 @@ bool CSphere::bInitialize( uint32 i_iStacks, uint32 i_iSlices, string i_sScaleMa
 	if( FUNC_FAILED( m_pIndexBufferCube->GetPointer( 0, (void **)&pDestIndices ) ) )
 		return false;
 
+	// 往 m_pVertexBufferCube 顶点缓存 填充数据
 	pDestVerticesCube->vPosition = vector3( -1, -1, -1 ); ++pDestVerticesCube;
 	pDestVerticesCube->vPosition = vector3( 1, -1, -1 ); ++pDestVerticesCube;
 	pDestVerticesCube->vPosition = vector3( 1, 1, -1 ); ++pDestVerticesCube;
@@ -519,6 +529,7 @@ bool CSphere::bInitialize( uint32 i_iStacks, uint32 i_iSlices, string i_sScaleMa
 	pDestVerticesCube->vPosition = vector3( 1, 1, 1 ); ++pDestVerticesCube;
 	pDestVerticesCube->vPosition = vector3( -1, 1, 1 ); ++pDestVerticesCube;
 
+	// 往 m_pIndexBufferCube 索引缓存 填充数据
 	*pDestIndices++ = 0; *pDestIndices++ = 2; *pDestIndices++ = 1;
 	*pDestIndices++ = 0; *pDestIndices++ = 3; *pDestIndices++ = 2;
 	*pDestIndices++ = 1; *pDestIndices++ = 6; *pDestIndices++ = 5;
