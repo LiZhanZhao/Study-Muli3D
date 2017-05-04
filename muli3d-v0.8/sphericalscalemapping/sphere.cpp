@@ -568,6 +568,7 @@ void CSphere::Render( uint32 i_iPass )
 	matrix44 matWorld; matMatrix44Identity( matWorld );
 	pCurCamera->SetWorldMatrix( matWorld );
 
+	// vs 设置 矩阵信息
 	m_pVertexShader->SetMatrix( m3dsc_worldmatrix, pCurCamera->matGetWorldMatrix() );
 	m_pVertexShader->SetMatrix( m3dsc_viewmatrix, pCurCamera->matGetViewMatrix() );
 	m_pVertexShader->SetMatrix( m3dsc_projectionmatrix, pCurCamera->matGetProjectionMatrix() );
@@ -575,29 +576,36 @@ void CSphere::Render( uint32 i_iPass )
 
 	m_pPixelShader->SetVector( 0, m_vColor );
 
+	// vs 传入camera pos
 	vector3 vCamPos = pCurCamera->vGetPosition();
 	m_pVertexShader->SetVector( 0, vector4( vCamPos.x, vCamPos.y, vCamPos.z, 0 ) );
 
+	// vs 传入light pos
 	CLight *pLight = m_pParent->pGetCurrentLight();
-
 	vector3 vLightPos = pLight->vGetPosition();
 	m_pVertexShader->SetVector( 1, vector4( vLightPos.x, vLightPos.y, vLightPos.z, 0 ) );
 
+	// ps 传入 light color
 	m_pPixelShader->SetVector( 1, pLight->vGetColor() );
 
 	CResManager *pResManager = m_pParent->pGetParent()->pGetResManager();
 	CTexture *pTexture = (CTexture *)pResManager->pGetResource( m_hEnvironment );
+	// 设置 第0个Texture为m_hEnvironment
 	pGraphics->SetTexture( 0, pTexture->pGetTexture() );
 
+	// 设置 第1个Texture为m_hAmbientLight
 	pTexture = (CTexture *)pResManager->pGetResource( m_hAmbientLight );
 	pGraphics->SetTexture( 1, pTexture->pGetTexture() );
 
+	// 设置 第2个Texture为m_hScaleMapA
 	pTexture = (CTexture *)pResManager->pGetResource( m_hScaleMapA );
 	pGraphics->SetTexture( 2, pTexture->pGetTexture() );
 
+	// 设置 第3个Texture为m_hScaleMapB
 	pTexture = (CTexture *)pResManager->pGetResource( m_hScaleMapB );
 	pGraphics->SetTexture( 3, pTexture->pGetTexture() );
 
+	// vs 设置 m_fLerpScale
 	m_pVertexShader->SetFloat( 0, m_fLerpScale );
 
 	pGraphics->SetVertexFormat( m_pVertexFormat );
@@ -617,6 +625,7 @@ void CSphere::Render( uint32 i_iPass )
 
 	// pGraphics->SetRenderState( m3drs_fillmode, m3dfill_wireframe );
 
+	// 这里就是 开始画 经过分解过的 vertexBuffer
 	#ifndef GEOSPHERE_SUBDIVISIONS
 	pGraphics->pGetM3DDevice()->DrawIndexedPrimitive( m3dpt_trianglelist,
 		0, 0, m_iNumVertices, 0, m_iNumPrimitives );
@@ -625,6 +634,7 @@ void CSphere::Render( uint32 i_iPass )
 	#endif
 
 	// Draw the cube
+	// 下面的就是开始画 Cube
 	m_pVertexShaderCube->SetMatrix( m3dsc_worldmatrix, pCurCamera->matGetWorldMatrix() );
 	m_pVertexShaderCube->SetMatrix( m3dsc_viewmatrix, pCurCamera->matGetViewMatrix() );
 	m_pVertexShaderCube->SetMatrix( m3dsc_projectionmatrix, pCurCamera->matGetProjectionMatrix() );

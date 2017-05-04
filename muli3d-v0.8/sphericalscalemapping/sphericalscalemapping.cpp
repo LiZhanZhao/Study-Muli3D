@@ -98,6 +98,7 @@ void CSphericalScaleMapping::FrameMove()
 	}
 
 	// rotate camera around sphere
+	// ÉãÏñ»úÈÆÇòĞı×ª
 	static float32 fRotX = 0.0f, fRotY = 0.0f;
 
 	int32 iDeltaX, iDeltaY;
