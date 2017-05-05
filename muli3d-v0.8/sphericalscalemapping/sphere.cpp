@@ -127,14 +127,19 @@ public:
 	bool bMightKillPixels() { return false; }
 	bool bExecute( const shaderreg *i_pInput, vector4 &io_vColor, float32 &io_fDepth )
 	{
-		vector3 vNormal = i_pInput[0]; vNormal.normalize();
-		vector3 vLightDir = i_pInput[1]; vLightDir.normalize();
+		vector3 vNormal = i_pInput[0]; 
+		vNormal.normalize();
+		vector3 vLightDir = i_pInput[1]; 
+		vLightDir.normalize();
 
 		// io_vColor = vNormal * 0.5f + vector3( 0.5f, 0.5f, 0.5f );
 		// return true;
 
 		// compute fresnel term and reflection vector
-		vector3 vViewDir = i_pInput[2]; vViewDir.normalize();
+		// vViewDir : Camera Pos - Vertex Pos
+		vector3 vViewDir = i_pInput[2]; 
+		vViewDir.normalize();
+		// 计算反射向量
 		const float32 fViewDotNormal = fSaturate( fVector3Dot( vNormal, vViewDir ) );
 		vector3 vReflection = vNormal * (2.0f * fViewDotNormal) - vViewDir;
 		vReflection.normalize();
@@ -154,6 +159,9 @@ public:
 			fDiffuse = 0.0f;
 
 		// intersect the reflection vector with a unit-sphere for localized reflections.
+		// i_pInput[3] : vWorldPosition. 插完值的world vertex
+		// 这里理解为，判断 一条ray(ray.o = vPixelPos, ray.d = vReflection)与单位圆进行 是否相交？
+		// 这里只是公式
 		const vector3 &vPixelPos = i_pInput[3];
 		float32 b = -2.0f * fVector3Dot( vReflection, vPixelPos );
 		float32 c = fVector3Dot( vPixelPos, vPixelPos ) - 1.0f;
@@ -165,7 +173,7 @@ public:
 		if( discrim > 0.0f )
 		{
 			const float32 fEpsilon = 0.0001f;
-
+			// 这里也是公式，求出 t
 			discrim = sqrtf( discrim );
 			fNearT = -( discrim - b ) * 0.5f;
 			bIntersects = fabsf( fNearT ) >= fEpsilon;
@@ -181,12 +189,15 @@ public:
 		const float32 fKr = 1.0f;
 		const float32 fKrMin = fKr * 0.1f;
 		const float32 fFresExp = 2.0f;
+		// Fresnel 公式
 		const float32 fFresnel = fKrMin + ( fKr - fKrMin ) * powf( 1.0f - fViewDotNormal, fFresExp );
 
-		vector4 vAmbient; SampleTexture( vAmbient, 1, vNormal.x, vNormal.y, vNormal.z );
+		vector4 vAmbient; 
+		SampleTexture( vAmbient, 1, vNormal.x, vNormal.y, vNormal.z );
 		const float32 fAmbientScale = 0.3f;
 
 		const vector4 &vLightColor = vGetVector( 1 );
+		// vGetVector( 0 ): m_vColor
 		io_vColor = vReflectionColor * fFresnel + vGetVector( 0 ) * ( vAmbient * fAmbientScale + vLightColor * fDiffuse ) + vLightColor * fSpecular;
 
 		return true;
@@ -266,6 +277,7 @@ CSphere::CSphere( class CScene *i_pParent )
 	m_pVertexShaderCube = 0;
 	m_pPixelShaderCube = 0;
 
+	// 这里就开始设置 m_vColor
 	SetColor( vector4( 1.0f, 0.75f, 0.25f, 1 ) );
 
 	m_iNumVertices = 0;
