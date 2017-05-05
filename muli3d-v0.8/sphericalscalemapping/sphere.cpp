@@ -10,11 +10,16 @@ public:
 	float32 fGetScale( const vector3 &i_vNormal )
 	{
 		vector4 vScaleA;
+		// 利用法线去采样索引为2的CubeTexture，那就是m_hScaleMapA(head.cube)
 		SampleTexture( vScaleA, 2, i_vNormal.x, i_vNormal.y, i_vNormal.z );
+
+		// fGetFloat( 0 ) 获得的 m_fLerpScale，0~1之间
 		if( fGetFloat( 0 ) > 0.0f )
 		{
 			vector4 vScaleB;
+			// 利用法线去采样索引为 3 的CubeTexture, m_hScaleMapB(skull.cube)
 			SampleTexture( vScaleB, 3, i_vNormal.x, i_vNormal.y, i_vNormal.z );
+			// 插值 颜色  r
 			return fLerp( vScaleA.r, vScaleB.r, fGetFloat( 0 ) );
 		}
 		else
@@ -23,7 +28,8 @@ public:
 
 	void Execute( const shaderreg *i_pInput, vector4 &o_vPosition, shaderreg *o_pOutput )
 	{
-		vector3 vSphereNormal = i_pInput[0]; vSphereNormal.normalize();
+		vector3 vSphereNormal = i_pInput[0]; 
+		vSphereNormal.normalize();
 
 		const vector3 vMyPos = vSphereNormal * fGetScale( vSphereNormal );
 
@@ -33,10 +39,15 @@ public:
 		const float32 fPhi = acosf( vSphereNormal.y );
 		const float32 fEpsilon = 4.0f * M3D_PI / 180.0f;
 
+		// 求 球的4个顶点，这个4个顶点就是 vSphereNormal 顶点的上下左右 顶点
 		vector3 vNextSphereNormals[4];
+		// up
 		vNextSphereNormals[0] = vector3( cosf( fTheta ) * sinf( fPhi - fEpsilon ), cosf( fPhi - fEpsilon ), sinf( fTheta ) * sinf( fPhi - fEpsilon ) ); // up
+		// right																																	// right
 		vNextSphereNormals[1] = vector3( cosf( fTheta + fEpsilon ) * sinf( fPhi ), cosf( fPhi ), sinf( fTheta + fEpsilon ) * sinf( fPhi ) ); // right
+		// down
 		vNextSphereNormals[2] = vector3( cosf( fTheta ) * sinf( fPhi + fEpsilon ), cosf( fPhi + fEpsilon ), sinf( fTheta ) * sinf( fPhi + fEpsilon ) ); // down
+		// left																																				// left
 		vNextSphereNormals[3] = vector3( cosf( fTheta - fEpsilon ) * sinf( fPhi ), cosf( fPhi ), sinf( fTheta - fEpsilon ) * sinf( fPhi ) ); // left
 
 		vector3 vDeltas[4];
