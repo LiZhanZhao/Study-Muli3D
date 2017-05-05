@@ -58,6 +58,7 @@ public:
 		}
 
 		vector3 vNormal = vSphereNormal;
+		// 个人觉得，这里应该是 for( uint32 j = 0; j < 4; ++j )，这样才是求平均值
 		for( uint32 j = 0; j < 1; ++j )
 		{
 			vector3 vLocalNormal;
@@ -71,15 +72,21 @@ public:
 		const vector4 vFinalPos = vector4( vMyPos.x, vMyPos.y, vMyPos.z, 1 );
 		o_vPosition = vFinalPos * matGetMatrix( m3dsc_wvpmatrix );
 
+		// o_pOutput[0] 是 世界坐标的法线,
+		// matGetMatrix( m3dsc_worldmatrix ) 是单位矩阵
 		#ifndef USE_TRIANGLESHADER
 		vVector3TransformNormal( *(vector3 *)&o_pOutput[0], vNormal, matGetMatrix( m3dsc_worldmatrix ) );
 		#endif
 
-		// calculate light direction
+		
 		const vector3 vWorldPosition = vFinalPos * matGetMatrix( m3dsc_worldmatrix );
+
+		// vGetVector(1) : light pos
+		// calculate light direction
 		o_pOutput[1] = (vector3)vGetVector( 1 ) - vWorldPosition;
 
 		// calculate light view direction
+		// vGetVector( 0 ) : camera pos
 		o_pOutput[2] = (vector3)vGetVector( 0 ) - vWorldPosition;
 
 		o_pOutput[3] = vWorldPosition;
@@ -576,7 +583,9 @@ void CSphere::Render( uint32 i_iPass )
 	CGraphics *pGraphics = m_pParent->pGetParent()->pGetGraphics();
 
 	CCamera *pCurCamera = pGraphics->pGetCurCamera();
-	matrix44 matWorld; matMatrix44Identity( matWorld );
+	matrix44 matWorld; 
+	// matWorld是单位矩阵
+	matMatrix44Identity( matWorld );
 	pCurCamera->SetWorldMatrix( matWorld );
 
 	// vs 设置 矩阵信息
