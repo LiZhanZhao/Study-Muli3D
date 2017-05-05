@@ -229,10 +229,13 @@ public:
 	bool bMightKillPixels() { return false; }
 	bool bExecute( const shaderreg *i_pInput, vector4 &io_vColor, float32 &io_fDepth )
 	{
-		vector4 vCubeColorA; SampleTexture( vCubeColorA, 2, i_pInput[0].x, i_pInput[0].y, i_pInput[0].z );
+		vector4 vCubeColorA; 
+		// 采样索引为2的CubeTexture，那就是m_hScaleMapA(head.cube)
+		SampleTexture( vCubeColorA, 2, i_pInput[0].x, i_pInput[0].y, i_pInput[0].z );
 		if( fGetFloat( 0 ) > 0.0f )
 		{
 			vector4 vCubeColorB;
+			// 采样索引为2的CubeTexture，那就是m_hScaleMapB(skull.cube)
 			SampleTexture( vCubeColorB, 3, i_pInput[0].x, i_pInput[0].y, i_pInput[0].z );
 			vVector4Lerp( vCubeColorA, vCubeColorA, vCubeColorB, fGetFloat( 0 ) );
 		}
