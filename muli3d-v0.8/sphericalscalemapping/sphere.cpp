@@ -182,6 +182,7 @@ public:
 		if( bIntersects )
 		{
 			vReflection = vReflection * fNearT - vPixelPos;
+			// 疑惑，为什么这里要取负 ？？
 			vReflection.y = -vReflection.y;
 			SampleTexture( vReflectionColor, 0, vReflection.x, vReflection.y, vReflection.z );
 		}
