@@ -10,11 +10,16 @@ public:
 	float32 fGetScale( const vector3 &i_vNormal )
 	{
 		vector4 vScaleA;
+		// 利用法线去采样索引为2的CubeTexture，那就是m_hScaleMapA(head.cube)
 		SampleTexture( vScaleA, 2, i_vNormal.x, i_vNormal.y, i_vNormal.z );
+
+		// fGetFloat( 0 ) 获得的 m_fLerpScale，0~1之间
 		if( fGetFloat( 0 ) > 0.0f )
 		{
 			vector4 vScaleB;
+			// 利用法线去采样索引为 3 的CubeTexture, m_hScaleMapB(skull.cube)
 			SampleTexture( vScaleB, 3, i_vNormal.x, i_vNormal.y, i_vNormal.z );
+			// 插值 颜色  r
 			return fLerp( vScaleA.r, vScaleB.r, fGetFloat( 0 ) );
 		}
 		else
@@ -23,7 +28,8 @@ public:
 
 	void Execute( const shaderreg *i_pInput, vector4 &o_vPosition, shaderreg *o_pOutput )
 	{
-		vector3 vSphereNormal = i_pInput[0]; vSphereNormal.normalize();
+		vector3 vSphereNormal = i_pInput[0]; 
+		vSphereNormal.normalize();
 
 		const vector3 vMyPos = vSphereNormal * fGetScale( vSphereNormal );
 
@@ -33,10 +39,15 @@ public:
 		const float32 fPhi = acosf( vSphereNormal.y );
 		const float32 fEpsilon = 4.0f * M3D_PI / 180.0f;
 
+		// 求 球的4个顶点，这个4个顶点就是 vSphereNormal 顶点的上下左右 顶点
 		vector3 vNextSphereNormals[4];
+		// up
 		vNextSphereNormals[0] = vector3( cosf( fTheta ) * sinf( fPhi - fEpsilon ), cosf( fPhi - fEpsilon ), sinf( fTheta ) * sinf( fPhi - fEpsilon ) ); // up
+		// right																																	// right
 		vNextSphereNormals[1] = vector3( cosf( fTheta + fEpsilon ) * sinf( fPhi ), cosf( fPhi ), sinf( fTheta + fEpsilon ) * sinf( fPhi ) ); // right
+		// down
 		vNextSphereNormals[2] = vector3( cosf( fTheta ) * sinf( fPhi + fEpsilon ), cosf( fPhi + fEpsilon ), sinf( fTheta ) * sinf( fPhi + fEpsilon ) ); // down
+		// left																																				// left
 		vNextSphereNormals[3] = vector3( cosf( fTheta - fEpsilon ) * sinf( fPhi ), cosf( fPhi ), sinf( fTheta - fEpsilon ) * sinf( fPhi ) ); // left
 
 		vector3 vDeltas[4];
@@ -47,6 +58,7 @@ public:
 		}
 
 		vector3 vNormal = vSphereNormal;
+		// 个人觉得，这里应该是 for( uint32 j = 0; j < 4; ++j )，这样才是求平均值
 		for( uint32 j = 0; j < 1; ++j )
 		{
 			vector3 vLocalNormal;
@@ -60,15 +72,21 @@ public:
 		const vector4 vFinalPos = vector4( vMyPos.x, vMyPos.y, vMyPos.z, 1 );
 		o_vPosition = vFinalPos * matGetMatrix( m3dsc_wvpmatrix );
 
+		// o_pOutput[0] 是 世界坐标的法线,
+		// matGetMatrix( m3dsc_worldmatrix ) 是单位矩阵
 		#ifndef USE_TRIANGLESHADER
 		vVector3TransformNormal( *(vector3 *)&o_pOutput[0], vNormal, matGetMatrix( m3dsc_worldmatrix ) );
 		#endif
 
-		// calculate light direction
+		
 		const vector3 vWorldPosition = vFinalPos * matGetMatrix( m3dsc_worldmatrix );
+
+		// vGetVector(1) : light pos
+		// calculate light direction
 		o_pOutput[1] = (vector3)vGetVector( 1 ) - vWorldPosition;
 
 		// calculate light view direction
+		// vGetVector( 0 ) : camera pos
 		o_pOutput[2] = (vector3)vGetVector( 0 ) - vWorldPosition;
 
 		o_pOutput[3] = vWorldPosition;
@@ -109,14 +127,19 @@ public:
 	bool bMightKillPixels() { return false; }
 	bool bExecute( const shaderreg *i_pInput, vector4 &io_vColor, float32 &io_fDepth )
 	{
-		vector3 vNormal = i_pInput[0]; vNormal.normalize();
-		vector3 vLightDir = i_pInput[1]; vLightDir.normalize();
+		vector3 vNormal = i_pInput[0]; 
+		vNormal.normalize();
+		vector3 vLightDir = i_pInput[1]; 
+		vLightDir.normalize();
 
 		// io_vColor = vNormal * 0.5f + vector3( 0.5f, 0.5f, 0.5f );
 		// return true;
 
 		// compute fresnel term and reflection vector
-		vector3 vViewDir = i_pInput[2]; vViewDir.normalize();
+		// vViewDir : Camera Pos - Vertex Pos
+		vector3 vViewDir = i_pInput[2]; 
+		vViewDir.normalize();
+		// 计算反射向量
 		const float32 fViewDotNormal = fSaturate( fVector3Dot( vNormal, vViewDir ) );
 		vector3 vReflection = vNormal * (2.0f * fViewDotNormal) - vViewDir;
 		vReflection.normalize();
@@ -136,6 +159,9 @@ public:
 			fDiffuse = 0.0f;
 
 		// intersect the reflection vector with a unit-sphere for localized reflections.
+		// i_pInput[3] : vWorldPosition. 插完值的world vertex
+		// 这里理解为，判断 一条ray(ray.o = vPixelPos, ray.d = vReflection)与单位圆进行 是否相交？
+		// 这里只是公式
 		const vector3 &vPixelPos = i_pInput[3];
 		float32 b = -2.0f * fVector3Dot( vReflection, vPixelPos );
 		float32 c = fVector3Dot( vPixelPos, vPixelPos ) - 1.0f;
@@ -147,7 +173,7 @@ public:
 		if( discrim > 0.0f )
 		{
 			const float32 fEpsilon = 0.0001f;
-
+			// 这里也是公式，求出 t
 			discrim = sqrtf( discrim );
 			fNearT = -( discrim - b ) * 0.5f;
 			bIntersects = fabsf( fNearT ) >= fEpsilon;
@@ -156,6 +182,7 @@ public:
 		if( bIntersects )
 		{
 			vReflection = vReflection * fNearT - vPixelPos;
+			// 疑惑，为什么这里要取负 ？？
 			vReflection.y = -vReflection.y;
 			SampleTexture( vReflectionColor, 0, vReflection.x, vReflection.y, vReflection.z );
 		}
@@ -163,12 +190,15 @@ public:
 		const float32 fKr = 1.0f;
 		const float32 fKrMin = fKr * 0.1f;
 		const float32 fFresExp = 2.0f;
+		// Fresnel 公式
 		const float32 fFresnel = fKrMin + ( fKr - fKrMin ) * powf( 1.0f - fViewDotNormal, fFresExp );
 
-		vector4 vAmbient; SampleTexture( vAmbient, 1, vNormal.x, vNormal.y, vNormal.z );
+		vector4 vAmbient; 
+		SampleTexture( vAmbient, 1, vNormal.x, vNormal.y, vNormal.z );
 		const float32 fAmbientScale = 0.3f;
 
 		const vector4 &vLightColor = vGetVector( 1 );
+		// vGetVector( 0 ): m_vColor
 		io_vColor = vReflectionColor * fFresnel + vGetVector( 0 ) * ( vAmbient * fAmbientScale + vLightColor * fDiffuse ) + vLightColor * fSpecular;
 
 		return true;
@@ -200,10 +230,13 @@ public:
 	bool bMightKillPixels() { return false; }
 	bool bExecute( const shaderreg *i_pInput, vector4 &io_vColor, float32 &io_fDepth )
 	{
-		vector4 vCubeColorA; SampleTexture( vCubeColorA, 2, i_pInput[0].x, i_pInput[0].y, i_pInput[0].z );
+		vector4 vCubeColorA; 
+		// 采样索引为2的CubeTexture，那就是m_hScaleMapA(head.cube)
+		SampleTexture( vCubeColorA, 2, i_pInput[0].x, i_pInput[0].y, i_pInput[0].z );
 		if( fGetFloat( 0 ) > 0.0f )
 		{
 			vector4 vCubeColorB;
+			// 采样索引为2的CubeTexture，那就是m_hScaleMapB(skull.cube)
 			SampleTexture( vCubeColorB, 3, i_pInput[0].x, i_pInput[0].y, i_pInput[0].z );
 			vVector4Lerp( vCubeColorA, vCubeColorA, vCubeColorB, fGetFloat( 0 ) );
 		}
@@ -248,6 +281,7 @@ CSphere::CSphere( class CScene *i_pParent )
 	m_pVertexShaderCube = 0;
 	m_pPixelShaderCube = 0;
 
+	// 这里就开始设置 m_vColor
 	SetColor( vector4( 1.0f, 0.75f, 0.25f, 1 ) );
 
 	m_iNumVertices = 0;
@@ -329,6 +363,7 @@ bool CSphere::bInitialize( uint32 i_iStacks, uint32 i_iSlices, string i_sScaleMa
 	CGraphics *pGraphics = m_pParent->pGetParent()->pGetGraphics();
 	CMuli3DDevice *pM3DDevice = pGraphics->pGetM3DDevice();
 
+	// 创建 VertexFormat
 	if( FUNC_FAILED( pM3DDevice->CreateVertexFormat( &m_pVertexFormat, VertexDeclaration, sizeof( VertexDeclaration ) ) ) )
 		return false;
 
@@ -416,7 +451,7 @@ bool CSphere::bInitialize( uint32 i_iStacks, uint32 i_iSlices, string i_sScaleMa
 #else
 	const float32 a = sqrtf( 2.0f / ( 5.0f + sqrtf( 5.0f ) ) );
 	const float32 b = sqrtf( 2.0f / ( 5.0f - sqrtf( 5.0f ) ) );
-	
+	// 12个顶点数据
 	vertexformat Vertices[12];
 	Vertices[ 0].vPosition = vector3(   -a, 0.0f,    b );
 	Vertices[ 1].vPosition = vector3(    a, 0.0f,    b );
@@ -431,6 +466,7 @@ bool CSphere::bInitialize( uint32 i_iStacks, uint32 i_iSlices, string i_sScaleMa
 	Vertices[10].vPosition = vector3(    b,   -a, 0.0f );
 	Vertices[11].vPosition = vector3(   -b,   -a, 0.0f );
 
+	// 20个三角形
 	const uint16 iTriangles[20][3] =
 	{
 		{  1,  4,  0 }, {  4,  9,  0 }, {  4,  5,  9 }, {  8,  5,  4 },
@@ -443,21 +479,25 @@ bool CSphere::bInitialize( uint32 i_iStacks, uint32 i_iSlices, string i_sScaleMa
 	vertexformat *pDestVertices = 0;
 	for( uint32 i = 0; i < 20; ++i )
 	{
+		// 递归分解三角形，把分解完三角形的所有的顶点，保存到g_CurrentVertices中
 		Subdivide( Vertices[ iTriangles[i][0] ], Vertices[ iTriangles[i][1] ],
 			Vertices[ iTriangles[i][2] ], GEOSPHERE_SUBDIVISIONS );
 
 		if( !i )
 		{
+			// 分解一个三角形之后的顶点个数，和三角形个数
 			m_iNumVertices = 20 * g_CurrentVertices.size();
 			m_iNumPrimitives = m_iNumVertices / 3;
 
+			// 创建VertexBuffer ,m_pVertexBuffer 
 			if( FUNC_FAILED( pM3DDevice->CreateVertexBuffer( &m_pVertexBuffer, sizeof( vertexformat ) * m_iNumVertices ) ) )
 				return false;
-
+			// 获得m_pVertexBuffer 的数据指针pDestVertices
 			if( FUNC_FAILED( m_pVertexBuffer->GetPointer( 0, (void **)&pDestVertices ) ) )
 				return false;
 		}
-
+		// 把 g_CurrentVertices 里面的顶点 复制到 m_pVertexBuffer 中，这里主要就是把20个三角形分解，
+		// 分解完之后的顶点就保存到m_pVertexBuffer中
 		for( vector<vertexformat>::iterator pCurVertex = g_CurrentVertices.begin(); pCurVertex != g_CurrentVertices.end(); ++pCurVertex, ++pDestVertices )
 			memcpy( pDestVertices, &(*pCurVertex), sizeof( vertexformat ) );
 
@@ -475,6 +515,7 @@ bool CSphere::bInitialize( uint32 i_iStacks, uint32 i_iSlices, string i_sScaleMa
 
 	// Load environment texture ...
 	CResManager *pResManager = m_pParent->pGetParent()->pGetResManager();
+	// 加载CubeTexture
 	m_hEnvironment = pResManager->hLoadResource( "majestic.cube" );
 	if( !m_hEnvironment )
 		return false;
@@ -493,7 +534,9 @@ bool CSphere::bInitialize( uint32 i_iStacks, uint32 i_iSlices, string i_sScaleMa
 	if( !m_hScaleMapB )
 		return false;
 
+
 	// Create the cube --------------------------------------------------------
+	// 创建Cube
 	if( FUNC_FAILED( pM3DDevice->CreateVertexFormat( &m_pVertexFormatCube, VertexDeclaration, sizeof( VertexDeclarationCube ) ) ) )
 		return false;
 
@@ -510,6 +553,7 @@ bool CSphere::bInitialize( uint32 i_iStacks, uint32 i_iSlices, string i_sScaleMa
 	if( FUNC_FAILED( m_pIndexBufferCube->GetPointer( 0, (void **)&pDestIndices ) ) )
 		return false;
 
+	// 往 m_pVertexBufferCube 顶点缓存 填充数据
 	pDestVerticesCube->vPosition = vector3( -1, -1, -1 ); ++pDestVerticesCube;
 	pDestVerticesCube->vPosition = vector3( 1, -1, -1 ); ++pDestVerticesCube;
 	pDestVerticesCube->vPosition = vector3( 1, 1, -1 ); ++pDestVerticesCube;
@@ -519,6 +563,7 @@ bool CSphere::bInitialize( uint32 i_iStacks, uint32 i_iSlices, string i_sScaleMa
 	pDestVerticesCube->vPosition = vector3( 1, 1, 1 ); ++pDestVerticesCube;
 	pDestVerticesCube->vPosition = vector3( -1, 1, 1 ); ++pDestVerticesCube;
 
+	// 往 m_pIndexBufferCube 索引缓存 填充数据
 	*pDestIndices++ = 0; *pDestIndices++ = 2; *pDestIndices++ = 1;
 	*pDestIndices++ = 0; *pDestIndices++ = 3; *pDestIndices++ = 2;
 	*pDestIndices++ = 1; *pDestIndices++ = 6; *pDestIndices++ = 5;
@@ -554,9 +599,12 @@ void CSphere::Render( uint32 i_iPass )
 	CGraphics *pGraphics = m_pParent->pGetParent()->pGetGraphics();
 
 	CCamera *pCurCamera = pGraphics->pGetCurCamera();
-	matrix44 matWorld; matMatrix44Identity( matWorld );
+	matrix44 matWorld; 
+	// matWorld是单位矩阵
+	matMatrix44Identity( matWorld );
 	pCurCamera->SetWorldMatrix( matWorld );
 
+	// vs 设置 矩阵信息
 	m_pVertexShader->SetMatrix( m3dsc_worldmatrix, pCurCamera->matGetWorldMatrix() );
 	m_pVertexShader->SetMatrix( m3dsc_viewmatrix, pCurCamera->matGetViewMatrix() );
 	m_pVertexShader->SetMatrix( m3dsc_projectionmatrix, pCurCamera->matGetProjectionMatrix() );
@@ -564,29 +612,36 @@ void CSphere::Render( uint32 i_iPass )
 
 	m_pPixelShader->SetVector( 0, m_vColor );
 
+	// vs 传入camera pos
 	vector3 vCamPos = pCurCamera->vGetPosition();
 	m_pVertexShader->SetVector( 0, vector4( vCamPos.x, vCamPos.y, vCamPos.z, 0 ) );
 
+	// vs 传入light pos
 	CLight *pLight = m_pParent->pGetCurrentLight();
-
 	vector3 vLightPos = pLight->vGetPosition();
 	m_pVertexShader->SetVector( 1, vector4( vLightPos.x, vLightPos.y, vLightPos.z, 0 ) );
 
+	// ps 传入 light color
 	m_pPixelShader->SetVector( 1, pLight->vGetColor() );
 
 	CResManager *pResManager = m_pParent->pGetParent()->pGetResManager();
 	CTexture *pTexture = (CTexture *)pResManager->pGetResource( m_hEnvironment );
+	// 设置 第0个Texture为m_hEnvironment
 	pGraphics->SetTexture( 0, pTexture->pGetTexture() );
 
+	// 设置 第1个Texture为m_hAmbientLight
 	pTexture = (CTexture *)pResManager->pGetResource( m_hAmbientLight );
 	pGraphics->SetTexture( 1, pTexture->pGetTexture() );
 
+	// 设置 第2个Texture为m_hScaleMapA
 	pTexture = (CTexture *)pResManager->pGetResource( m_hScaleMapA );
 	pGraphics->SetTexture( 2, pTexture->pGetTexture() );
 
+	// 设置 第3个Texture为m_hScaleMapB
 	pTexture = (CTexture *)pResManager->pGetResource( m_hScaleMapB );
 	pGraphics->SetTexture( 3, pTexture->pGetTexture() );
 
+	// vs 设置 m_fLerpScale
 	m_pVertexShader->SetFloat( 0, m_fLerpScale );
 
 	pGraphics->SetVertexFormat( m_pVertexFormat );
@@ -606,6 +661,7 @@ void CSphere::Render( uint32 i_iPass )
 
 	// pGraphics->SetRenderState( m3drs_fillmode, m3dfill_wireframe );
 
+	// 这里就是 开始画 经过分解过的 vertexBuffer
 	#ifndef GEOSPHERE_SUBDIVISIONS
 	pGraphics->pGetM3DDevice()->DrawIndexedPrimitive( m3dpt_trianglelist,
 		0, 0, m_iNumVertices, 0, m_iNumPrimitives );
@@ -614,6 +670,7 @@ void CSphere::Render( uint32 i_iPass )
 	#endif
 
 	// Draw the cube
+	// 下面的就是开始画 Cube
 	m_pVertexShaderCube->SetMatrix( m3dsc_worldmatrix, pCurCamera->matGetWorldMatrix() );
 	m_pVertexShaderCube->SetMatrix( m3dsc_viewmatrix, pCurCamera->matGetViewMatrix() );
 	m_pVertexShaderCube->SetMatrix( m3dsc_projectionmatrix, pCurCamera->matGetProjectionMatrix() );

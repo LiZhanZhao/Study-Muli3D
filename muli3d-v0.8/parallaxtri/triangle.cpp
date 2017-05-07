@@ -16,6 +16,7 @@ public:
 		o_pOutput[0] = i_pInput[3];
 
 		// build transformation matrix to tangent space
+		// 注意，matGetMatrix( m3dsc_worldmatrix ) 是单位矩阵
 		vector3 vNormal; vVector3TransformNormal( vNormal, i_pInput[1], matGetMatrix( m3dsc_worldmatrix ) );
 		vector3 vTangent; vVector3TransformNormal( vTangent, i_pInput[2], matGetMatrix( m3dsc_worldmatrix ) );
 		vector3 vBinormal; vVector3Cross( vBinormal, vNormal, vTangent );
@@ -193,7 +194,9 @@ void CTriangle::Render( uint32 i_iPass )
 	CGraphics *pGraphics = m_pParent->pGetParent()->pGetGraphics();
 
 	CCamera *pCurCamera = pGraphics->pGetCurCamera();
-	matrix44 matWorld; matMatrix44Identity( matWorld );
+	matrix44 matWorld; 
+	// 这里的matWorld 是单位矩阵
+	matMatrix44Identity( matWorld );
 	pCurCamera->SetWorldMatrix( matWorld );
 
 	m_pVertexShader->SetMatrix( m3dsc_worldmatrix, pCurCamera->matGetWorldMatrix() );
