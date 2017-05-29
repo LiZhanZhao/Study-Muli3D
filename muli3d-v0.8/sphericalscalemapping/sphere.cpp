@@ -59,7 +59,8 @@ public:
 
 		vector3 vNormal = vSphereNormal;
 		// 个人觉得，这里应该是 for( uint32 j = 0; j < 4; ++j )，这样才是求平均值
-		for( uint32 j = 0; j < 1; ++j )
+		//for( uint32 j = 0; j < 1; ++j )
+		for (uint32 j = 0; j < 4; ++j)
 		{
 			vector3 vLocalNormal;
 			vVector3Cross( vLocalNormal, vDeltas[j], vDeltas[(j + 1) % 4] );

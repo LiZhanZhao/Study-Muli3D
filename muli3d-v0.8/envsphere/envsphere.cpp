@@ -26,7 +26,7 @@ bool CEnvSphere::bCreateWorld()
 	m_pCamera = 0;
 	m_hSphere = 0;
 	m_hLight = 0;
-
+	// ´´½¨Camera
 	// Create and setup camera ------------------------------------------------
 	m_pCamera = new CMyCamera( pGetGraphics() );
 	if( !m_pCamera->bCreateRenderCamera( iGetWindowWidth(), iGetWindowHeight() ) )
