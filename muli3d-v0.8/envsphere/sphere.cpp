@@ -13,14 +13,20 @@ public:
 		o_vPosition = i_pInput[0] * matGetMatrix( m3dsc_wvpmatrix );
 
 		// transform normal (normal = position when sphere's origin = (0,0,0))
+		// o_pOutput[0] = normal
 		vVector3TransformNormal( *(vector3 *)&o_pOutput[0], i_pInput[0], matGetMatrix( m3dsc_worldmatrix ) );
 
 		// calculate per pixel light direction
 		const vector3 vWorldPosition = i_pInput[0] * matGetMatrix( m3dsc_worldmatrix );
+
+		// (vector3)vGetVector( 1 ) = LightPos
 		vector3 vLightDir = (vector3)vGetVector( 1 ) - vWorldPosition;
+
+		// worldpos 指向 LightPos
 		o_pOutput[1] = vLightDir;
 
 		// calculate per pixel light view direction
+		// (vector3)vGetVector( 0 ) = CameraPos
 		vector3 vViewDir = (vector3)vGetVector( 0 ) - vWorldPosition;
 		o_pOutput[2] = vViewDir;
 	}
@@ -48,6 +54,7 @@ public:
 		// compute fresnel term and reflection vector
 		const vector3 vViewDir = i_pInput[2];
 		const float32 fViewDotNormal = fSaturate( fVector3Dot( vNormal, vViewDir ) );
+		// 计算 反射向量
 		vector3 vReflection = vNormal * (2.0f * fViewDotNormal) - vViewDir;
 		vReflection.normalize();
 		const float32 fFresnel = (1.0f - fViewDotNormal);// * (1.0f - fViewDotNormal);
@@ -67,6 +74,7 @@ public:
 			fDiffuse = 0.0f;
 
 		vector4 vReflectionEnv;
+		// 利用反射向量，采样index = 0 的CubeTexture
 		SampleTexture( vReflectionEnv, 0, vReflection.x, vReflection.y, vReflection.z );
 
 		vVector4Lerp( io_vColor, io_vColor, vReflectionEnv, 1.0f - fFresnel ); // use inverse fresnel
@@ -117,6 +125,7 @@ bool CSphere::bInitialize( float32 i_fRadius, uint32 i_iStacks, uint32 i_iSlices
 	CGraphics *pGraphics = m_pParent->pGetParent()->pGetGraphics();
 	CMuli3DDevice *pM3DDevice = pGraphics->pGetM3DDevice();
 
+	// 创建VertexFormat
 	if( FUNC_FAILED( pM3DDevice->CreateVertexFormat( &m_pVertexFormat, VertexDeclaration, sizeof( VertexDeclaration ) ) ) )
 		return false;
 
@@ -124,12 +133,15 @@ bool CSphere::bInitialize( float32 i_fRadius, uint32 i_iStacks, uint32 i_iSlices
 	m_iNumVertices = i_iStacks * i_iSlices * 4;
 	m_iNumPrimitives = i_iStacks * i_iSlices * 2;
 
+	// 创建VertexBuffer
 	if( FUNC_FAILED( pM3DDevice->CreateVertexBuffer( &m_pVertexBuffer, sizeof( vertexformat ) * m_iNumVertices ) ) )
 		return false;
 
+	// 创建IndexBuffer
 	if( FUNC_FAILED( pM3DDevice->CreateIndexBuffer( &m_pIndexBuffer, sizeof( uint16 ) * m_iNumPrimitives * 3, m3dfmt_index16 ) ) )
 		return false;
 
+	// 下面的大概理解为确定顶点数据和索引数据，也就是填充m_pVertexBuffer和m_pIndexBuffer
 	vertexformat *pDestVertices = 0;
 	if( FUNC_FAILED( m_pVertexBuffer->GetPointer( 0, (void **)&pDestVertices ) ) )
 		return false;
@@ -232,6 +244,7 @@ void CSphere::Render( uint32 i_iPass )
 	CGraphics *pGraphics = m_pParent->pGetParent()->pGetGraphics();
 
 	CCamera *pCurCamera = pGraphics->pGetCurCamera();
+	// matWorld是单位矩阵
 	matrix44 matWorld; matMatrix44Identity( matWorld );
 	pCurCamera->SetWorldMatrix( matWorld );
 
@@ -240,20 +253,25 @@ void CSphere::Render( uint32 i_iPass )
 	m_pVertexShader->SetMatrix( m3dsc_projectionmatrix, pCurCamera->matGetProjectionMatrix() );
 	m_pVertexShader->SetMatrix( m3dsc_wvpmatrix, pCurCamera->matGetWorldMatrix() * pCurCamera->matGetViewMatrix() * pCurCamera->matGetProjectionMatrix() );
 
+	// 传入 m_vColor 到 m_pPixelShader
 	m_pPixelShader->SetVector( 0, m_vColor );
 
 	vector3 vCamPos = pCurCamera->vGetPosition();
+	// 传入CamPos到m_pVertexShader 
 	m_pVertexShader->SetVector( 0, vector4( vCamPos.x, vCamPos.y, vCamPos.z, 0 ) );
 
 	CLight *pLight = m_pParent->pGetCurrentLight();
 	
 	vector3 vLightPos = pLight->vGetPosition();
+	// 传入LightPos到m_pVertexShader 
 	m_pVertexShader->SetVector( 1, vector4( vLightPos.x, vLightPos.y, vLightPos.z, 0 ) );
-	
+
+	// 传入LightColor到m_pPixelShader
 	m_pPixelShader->SetVector( 1, pLight->vGetColor() );
 
 	CResManager *pResManager = m_pParent->pGetParent()->pGetResManager();
 	CTexture *pTexture = (CTexture *)pResManager->pGetResource( m_hEnvironment );
+	// 设置 m_hEnvironment 到 index = 0 的 texture
 	pGraphics->SetTexture( 0, pTexture->pGetTexture() );
 	
 	pGraphics->SetVertexFormat( m_pVertexFormat );

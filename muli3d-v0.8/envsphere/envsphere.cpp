@@ -40,11 +40,13 @@ bool CEnvSphere::bCreateWorld()
 
 	// Register triangle-entity and create an instance ------------------------
 	pGetScene()->RegisterEntityType( "sphere", CSphere::pCreate );
+	// 调用CSphere::pCreate
 	m_hSphere = pGetScene()->hCreateEntity( "sphere" );
 	if( !m_hSphere )
 		return false;
 
 	CSphere *pSphere = (CSphere *)pGetScene()->pGetEntity( m_hSphere );
+	// CSphere 初始化，主要是填充 VertexBuffer和IndexBuffer
 	if( !pSphere->bInitialize( 1.0f, 16, 16, "majestic.cube" ) )
 		return false;
 
