@@ -2361,6 +2361,8 @@ void CMuli3DDevice::RasterizeScanline_ColorOnly( uint32 i_iY, uint32 i_iX, uint3
 			// 现在这里在进行乘上 w，主要目的就是求正确的插值。
 			// 因为 最终投影点x、y和s/z、t/z是线性关系，所以，这里就是
 			// 对s/z、t/z关于x’、y’进行插值得到s’/z’、t’/z’，然后用s’/z’和t’/z’分别除以1/z’，就得到了插值s’和t’
+
+			// 在ProjectVertex函数中，所有的vs输出都除以w了
 			m_TriangleInfo.fCurPixelInvW = 1.0f / io_pVSOutput->vPosition.w;
 			// 这里其实相当于乘上w
 			MultiplyVertexShaderOutputRegisters( &PSInput, io_pVSOutput, m_TriangleInfo.fCurPixelInvW );
